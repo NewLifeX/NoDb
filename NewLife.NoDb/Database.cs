@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Threading;
 using NewLife.Data;
 using NewLife.NoDb.Storage;
 
@@ -51,35 +52,44 @@ namespace NewLife.NoDb
                     name = "NoDb";
             }
 
-            if (file.IsNullOrEmpty())
-                _mmf = MemoryMappedFile.CreateOrOpen(name, 1024);
-            else
+            // 多进程加锁，避免同时创建初始化
+            var mutex = new Mutex(true, name, out var mutexCreated);
+            try
             {
-                file = file.GetFullPath();
-                var capacity = 100 * 1024 * 1024;
-                if (!file.AsFile().Exists)
+                if (file.IsNullOrEmpty())
+                    _mmf = MemoryMappedFile.CreateOrOpen(name, 1024);
+                else
                 {
-                    //capacity = 0;
-                    //File.WriteAllBytes(file, new Byte[1]);
-                }
-                //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
+                    file = file.GetFullPath();
+                    var capacity = 100 * 1024 * 1024;
+                    if (!file.AsFile().Exists)
+                    {
+                        //capacity = 0;
+                        //File.WriteAllBytes(file, new Byte[1]);
+                    }
+                    //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
 
-                var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096);
-                if (fs.Length == 0) fs.SetLength(1024);
-                _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                    var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096);
+                    if (fs.Length == 0) fs.SetLength(1024);
+                    _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                }
+
+                // 给予非系统账号完全权限
+                _mmf.CheckAccessControl();
+
+                using (var fs = _mmf.CreateViewStream())
+                {
+                    var p = fs.Position;
+                    if (!Read(fs))
+                    {
+                        fs.Position = p;
+                        Write(fs);
+                    }
+                }
             }
-
-            // 给予非系统账号完全权限
-            _mmf.CheckAccessControl();
-
-            using (var fs = _mmf.CreateViewStream())
+            finally
             {
-                var p = fs.Position;
-                if (!Read(fs))
-                {
-                    fs.Position = p;
-                    Write(fs);
-                }
+                mutex.ReleaseMutex();
             }
         }
         #endregion

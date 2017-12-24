@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.NoDb;
@@ -16,13 +12,18 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            try
-            {
+            if (Debugger.IsAttached)
                 Test2();
-            }
-            catch (Exception ex)
+            else
             {
-                XTrace.WriteException(ex);
+                try
+                {
+                    Test2();
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
             }
 
             Console.WriteLine("OK!");
@@ -56,7 +57,7 @@ namespace Test
 
         static void Test2()
         {
-            Console.ReadKey();
+            //Console.ReadKey();
 
             var db = new Database("test.db");
             Console.WriteLine(db.Version);
