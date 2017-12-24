@@ -490,8 +490,8 @@ namespace NewLife.NoDb.Storage
 
         private DbNode GetBucket(Byte[] key)
         {
-            var hash = key.Length == 0 ? 0 : key.Crc16();
-            hash %= _table.Buckets.Length;
+            var hash = key.Length == 0 ? 0 : BKDRHash(key);
+            hash %= (UInt32)_table.Buckets.Length;
 
             return Volatile.Read(ref _table.Buckets[hash]);
         }
@@ -532,6 +532,30 @@ namespace NewLife.NoDb.Storage
         {
             for (var index = fromInclusive; index < toExclusive; ++index)
                 Monitor.Exit(_table.Locks[index]);
+        }
+
+        private static UInt32 BKDRHash(Byte[] data)
+        {
+            UInt32 hash = 0;
+            for (var i = 0; i < data.Length; i++)
+            {
+                hash = hash * 131 + data[i];
+            }
+
+            return hash & 0x7FFF_FFFF;
+        }
+
+        private static UInt32 APHash(Byte[] data)
+        {
+            UInt32 hash = 0;
+            for (var i = 0; i < data.Length; i++)
+            {
+                if ((i & 1) == 0)
+                    hash ^= ((hash << 7) ^ data[i] ^ (hash >> 3));
+                else
+                    hash ^= (~((hash << 11) ^ data[i] ^ (hash >> 5)));
+            }
+            return hash & 0x7FFF_FFFF;
         }
         #endregion
     }
