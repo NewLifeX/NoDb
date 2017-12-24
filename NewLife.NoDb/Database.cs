@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NewLife.Data;
 using NewLife.NoDb.Storage;
 
 namespace NewLife.NoDb
@@ -18,25 +15,28 @@ namespace NewLife.NoDb
     {
         #region 属性
         /// <summary>幻数</summary>
-        public String Magic { get; private set; } = "NoDb";
+        public const String Magic = "NoDb";
 
         /// <summary>版本</summary>
         public Int32 Version { get; private set; }
 
-        ///// <summary>数据区堆管理</summary>
+        /// <summary>索引区</summary>
+        private DbIndex Index { get; set; }
+
+        ///// <summary>数据区</summary>
         //public Heap Heap { get; private set; }
 
         private MemoryMappedFile _mmf;
-        private MemoryMappedViewAccessor _view;
+        //private MemoryMappedViewAccessor _view;
         #endregion
 
         #region 构造
-        /// <summary>使用数据流实例化数据库</summary>
-        /// <param name="stream"></param>
-        public Database(Stream stream)
-        {
-            Read(stream);
-        }
+        ///// <summary>使用数据流实例化数据库</summary>
+        ///// <param name="stream"></param>
+        //public Database(Stream stream)
+        //{
+        //    Read(stream);
+        //}
 
         /// <summary>使用内存映射文件实例化数据库</summary>
         /// <param name="file"></param>
@@ -54,39 +54,122 @@ namespace NewLife.NoDb
             if (file.IsNullOrEmpty())
                 _mmf = MemoryMappedFile.CreateOrOpen(name, 1024);
             else
-                _mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, 1024);
-
-            _view = _mmf.CreateViewAccessor();
-
-            var fs = _mmf.CreateViewStream();
-            var p = fs.Position;
-            Read(fs);
-            if (Magic != "NoDb")
             {
-                fs.Position = p;
-                Write(fs);
+                file = file.GetFullPath();
+                var capacity = 100 * 1024 * 1024;
+                if (!file.AsFile().Exists)
+                {
+                    //capacity = 0;
+                    //File.WriteAllBytes(file, new Byte[1]);
+                }
+                //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
+
+                var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096);
+                if (fs.Length == 0) fs.SetLength(1024);
+                _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+            }
+
+            using (var fs = _mmf.CreateViewStream())
+            {
+                var p = fs.Position;
+                if (!Read(fs))
+                {
+                    fs.Position = p;
+                    Write(fs);
+                }
             }
         }
         #endregion
 
-        #region 方法
-        private void Read(Stream stream)
+        #region 主要方法
+        public Packet Get(String key)
         {
-            var reader = new BinaryReader(stream);
+            /*
+             * 1，从索引区找到节点信息
+             * 2，根据节点信息指向，从数据区读取数据
+             */
 
-            Magic = reader.ReadBytes(4).ToStr();
-            Version = reader.ReadByte();
+            if (!TryGetValue(key, out var block)) return null;
+
+            return null;
+        }
+
+        public Boolean TryGetValue(String key, out Block block)
+        {
+            block = null;
+            return false;
+        }
+
+        public Boolean Set(String key, Packet pk)
+        {
+            return false;
+        }
+        #endregion
+
+        #region 序列化
+        private Boolean Read(Stream stream)
+        {
+            if (stream.Length < 6) return false;
+
+            var magic = stream.ReadBytes(4).ToStr();
+            if (Magic != magic) return false;
+
+            // 版本和头部长度
+            Version = stream.ReadByte();
+            var len = stream.ReadByte();
+            if (len < 32 + 4 || stream.Position + len >= stream.Length) return false;
+
+            var buf = stream.ReadBytes(len);
+            var ms = new MemoryStream(buf);
+            var reader = new BinaryReader(ms);
+
+            var idx = Block.Read(reader);
+            var data = Block.Read(reader);
+
+            len = (Int32)ms.Position;
+            var crc = reader.ReadUInt32();
+
+            // 校验
+            if (crc != buf.ReadBytes(0, len).Crc()) return false;
+
+            // 索引区
+            Index = new DbIndex(_mmf, idx);
+
+            // 数据区
+            //Heap = new Heap(_mmf, data);
+
+            return true;
         }
 
         private void Write(Stream stream)
         {
             var writer = new BinaryWriter(stream);
 
-            writer.Write("NoDb".GetBytes());
+            writer.Write(Magic.GetBytes());
 
             var v = Version;
             if (v <= 0) v = 1;
             writer.Write((Byte)v);
+
+            //writer.Write((Byte)32);
+            var ms = new MemoryStream();
+            var writer2 = new BinaryWriter(ms);
+
+            // 索引区
+            var idx = new Block(256, 10 * 1024);
+            Index = new DbIndex(_mmf, idx);
+            idx.Write(writer2);
+
+            //// 数据区
+            //bk = Heap.GetArea();
+            //bk.Write(writer2);
+
+            // 计算校验
+            var buf = ms.ToArray();
+            var crc = buf.Crc();
+            writer.Write((Byte)32);
+            writer.Write(buf, 0, buf.Length);
+            writer.Write(crc);
         }
         #endregion
     }

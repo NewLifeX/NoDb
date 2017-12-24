@@ -16,7 +16,14 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test2();
+            try
+            {
+                Test2();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
 
             Console.WriteLine("OK!");
             Console.ReadKey(true);
@@ -49,8 +56,9 @@ namespace Test
 
         static void Test2()
         {
+            Console.ReadKey();
+
             var db = new Database("test.db");
-            Console.WriteLine(db.Magic);
             Console.WriteLine(db.Version);
 
         }

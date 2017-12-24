@@ -48,8 +48,12 @@
   <ItemGroup>
     <Compile Include="Database.cs" />
     <Compile Include="DbHeader.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="Storage\DbIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\Block.cs" />
+    <Compile Include="Storage\DbNode.cs" />
+    <Compile Include="Storage\Bucket.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
