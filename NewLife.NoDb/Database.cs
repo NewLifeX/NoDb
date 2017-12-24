@@ -53,25 +53,24 @@ namespace NewLife.NoDb
             }
 
             // 多进程加锁，避免同时创建初始化
-            var mutex = new Mutex(true, name, out var mutexCreated);
+            var mutex = new Mutex(true, "Mutex_" + name, out var mutexCreated);
             try
             {
+                name = "MMF_" + name;
                 if (file.IsNullOrEmpty())
                     _mmf = MemoryMappedFile.CreateOrOpen(name, 1024);
                 else
                 {
                     file = file.GetFullPath();
-                    var capacity = 100 * 1024 * 1024;
-                    if (!file.AsFile().Exists)
-                    {
-                        //capacity = 0;
-                        //File.WriteAllBytes(file, new Byte[1]);
-                    }
+
+                    var capacity = 1 * 1024 * 1024;
+                    //if (file.AsFile().Exists) capacity = 0;
                     //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
 
-                    var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096);
-                    if (fs.Length == 0) fs.SetLength(1024);
-                    _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                    // 使用文件流可以控制共享读写，让别的进程也可以读写文件
+                    var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
+                    if (fs.Length == 0) fs.SetLength(1024 * 1024);
+                    _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, false);
                 }
 
                 // 给予非系统账号完全权限
@@ -169,7 +168,7 @@ namespace NewLife.NoDb
             var writer2 = new BinaryWriter(ms);
 
             // 索引区
-            var idx = new Block(256, 10 * 1024);
+            var idx = new Block(256, 1 * 1024);
             Index = new DbIndex(_mmf, idx);
             idx.Write(writer2);
 
