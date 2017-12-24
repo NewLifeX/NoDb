@@ -63,13 +63,13 @@ namespace NewLife.NoDb
                 {
                     file = file.GetFullPath();
 
-                    var capacity = 1 * 1024 * 1024;
+                    var capacity = 4 * 1024 * 1024;
                     //if (file.AsFile().Exists) capacity = 0;
                     //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
 
                     // 使用文件流可以控制共享读写，让别的进程也可以读写文件
                     var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
-                    if (fs.Length == 0) fs.SetLength(1024 * 1024);
+                    if (fs.Length == 0) fs.SetLength(1024);
                     _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, false);
                 }
 
@@ -168,7 +168,7 @@ namespace NewLife.NoDb
             var writer2 = new BinaryWriter(ms);
 
             // 索引区
-            var idx = new Block(256, 1 * 1024);
+            var idx = new Block(256, 2 * 1024 * 1024);
             Index = new DbIndex(_mmf, idx);
             idx.Write(writer2);
 
