@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using NewLife.NoDb.Storage;
 
 namespace NewLife.NoDb
@@ -34,6 +32,21 @@ namespace NewLife.NoDb
         public static Block ReadBlock(this UnmanagedMemoryAccessor accessor, Int32 position)
         {
             return null;
+        }
+
+        public static void CheckAccessControl(this MemoryMappedFile mmf)
+        {
+            var user = $"{Environment.MachineName}\\{Environment.UserName}";
+            var rule = new AccessRule<MemoryMappedFileRights>(user, MemoryMappedFileRights.FullControl, AccessControlType.Allow);
+
+            var msc = mmf.GetAccessControl();
+            foreach (AccessRule<MemoryMappedFileRights> ar in msc.GetAccessRules(true, true, typeof(NTAccount)))
+            {
+                if (ar.IdentityReference == rule.IdentityReference && ar.AccessControlType == rule.AccessControlType && ar.Rights == rule.Rights) return;
+            }
+
+            msc.AddAccessRule(rule);
+            mmf.SetAccessControl(msc);
         }
     }
 }

@@ -69,6 +69,9 @@ namespace NewLife.NoDb
                 _mmf = MemoryMappedFile.CreateFromFile(fs, name, capacity, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
             }
 
+            // 给予非系统账号完全权限
+            _mmf.CheckAccessControl();
+
             using (var fs = _mmf.CreateViewStream())
             {
                 var p = fs.Position;
