@@ -23,7 +23,6 @@ namespace NewLife.NoDb.Storage
         private UnmanagedMemoryAccessor _data;
 
         private volatile Bucket _table;
-        private readonly Boolean _growLockArray;
         private Int32 _keyRehashCount;
         private Int32 _budget;
         #endregion
@@ -429,7 +428,7 @@ namespace NewLife.NoDb.Storage
                         _budget = 2 * _budget;
                         if (_budget >= 0)
                             return;
-                        _budget = int.MaxValue;
+                        _budget = Int32.MaxValue;
                         return;
                     }
                 }
@@ -443,18 +442,18 @@ namespace NewLife.NoDb.Storage
                     if (length1 > 2146435071)
                         flag = true;
                 }
-                catch (OverflowException ex)
+                catch (OverflowException)
                 {
                     flag = true;
                 }
                 if (flag)
                 {
                     length1 = 2146435071;
-                    _budget = int.MaxValue;
+                    _budget = Int32.MaxValue;
                 }
                 AcquireLocks(1, tables.Locks.Length, ref locksAcquired);
                 var locks = tables.Locks;
-                if (_growLockArray && tables.Locks.Length < 1024)
+                if (tables.Locks.Length < 1024)
                 {
                     locks = new Object[tables.Locks.Length * 2];
                     Array.Copy(tables.Locks, locks, tables.Locks.Length);

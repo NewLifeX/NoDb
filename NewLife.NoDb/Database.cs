@@ -94,6 +94,9 @@ namespace NewLife.NoDb
         #endregion
 
         #region 主要方法
+        /// <summary>获取</summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public Packet Get(String key)
         {
             /*
@@ -106,12 +109,20 @@ namespace NewLife.NoDb
             return null;
         }
 
+        /// <summary>尝试获取</summary>
+        /// <param name="key"></param>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public Boolean TryGetValue(String key, out Block block)
         {
             block = null;
             return false;
         }
 
+        /// <summary>设置</summary>
+        /// <param name="key"></param>
+        /// <param name="pk"></param>
+        /// <returns></returns>
         public Boolean Set(String key, Packet pk)
         {
             return false;

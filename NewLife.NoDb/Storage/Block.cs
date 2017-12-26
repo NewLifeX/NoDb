@@ -36,10 +36,8 @@ namespace NewLife.NoDb.Storage
         /// <summary>数据块是否为空</summary>
         public Boolean IsNull => Position == 0 && Size == 0;
 
-        /// <summary>
-        /// Returns index of the block after fragment.
-        /// </summary>
-        public Int64 PositionPlusSize => checked(Position + Size);
+        /// <summary>下一块位置</summary>
+        public Int64 Next => checked(Position + Size);
 
         /// <summary>序列化</summary>
         /// <param name="writer"></param>
@@ -77,7 +75,7 @@ namespace NewLife.NoDb.Storage
         /// <returns></returns>
         public Int32 CompareTo(Block other) => Position.CompareTo(other.Position);
 
-        /// <summary>相等/summary>
+        /// <summary>相等</summary>
         /// <param name="obj"></param>
         /// <returns></returns>
         public override Boolean Equals(Object obj)

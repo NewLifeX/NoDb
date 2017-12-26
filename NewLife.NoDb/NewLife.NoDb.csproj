@@ -54,6 +54,8 @@
     <Compile Include="Storage\Block.cs" />
     <Compile Include="Storage\DbNode.cs" />
     <Compile Include="Storage\Bucket.cs" />
+    <Compile Include="Storage\Heap.cs" />
+    <Compile Include="Storage\MemoryBlock.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
