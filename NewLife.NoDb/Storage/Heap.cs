@@ -83,7 +83,7 @@ namespace NewLife.NoDb.Storage
 
             if (bk.Size == 0)
             {
-                free.RemoveAt(idx);
+                //free.RemoveAt(idx);
 
                 // 下一次开始搜索的位置
                 activeIndex = -1;

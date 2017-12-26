@@ -75,7 +75,7 @@ namespace Test
             for (var i = 0; i < count; i++)
             {
                 // 申请随机大小
-                bk = hp.Alloc(16);
+                bk = hp.Alloc(1601);
                 list.Add(bk);
             }
             sw.Stop();
