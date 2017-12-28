@@ -10,6 +10,9 @@ using NewLife.Security;
 
 namespace Test
 {
+    /// <summary>
+    /// test
+    /// </summary>
     class Program
     {
         static void Main(String[] args)
