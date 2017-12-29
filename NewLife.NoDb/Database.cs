@@ -104,20 +104,20 @@ namespace NewLife.NoDb
              * 2，根据节点信息指向，从数据区读取数据
              */
 
-            if (!TryGetValue(key, out var block)) return null;
+            //if (!TryGetValue(key, out var block)) return null;
 
             return null;
         }
 
-        /// <summary>尝试获取</summary>
-        /// <param name="key"></param>
-        /// <param name="block"></param>
-        /// <returns></returns>
-        public Boolean TryGetValue(String key, out Block block)
-        {
-            block = null;
-            return false;
-        }
+        ///// <summary>尝试获取</summary>
+        ///// <param name="key"></param>
+        ///// <param name="block"></param>
+        ///// <returns></returns>
+        //public Boolean TryGetValue(String key, out Block block)
+        //{
+        //    //block = null;
+        //    return false;
+        //}
 
         /// <summary>设置</summary>
         /// <param name="key"></param>

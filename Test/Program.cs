@@ -67,19 +67,20 @@ namespace Test
             //Console.ReadKey();
 
             // GC闭嘴
-            GC.TryStartNoGCRegion(10_000_000);
+            //GC.TryStartNoGCRegion(10_000_000);
 
-            var bk = new Block(256, 16_000_000_000);
+            var bk = new Block(256, 20_000_000_000);
             var hp = new Heap(bk);
 
             var count = 10_000_000;
-            var list = new List<Block>(count);
+            //var list = new List<Block>(count);
+            var list = new Block[count];
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < count; i++)
             {
                 // 申请随机大小
-                bk = hp.Alloc(1601);
-                list.Add(bk);
+                list[i] = hp.Alloc(1600);
+                //list.Add(bk);
             }
             sw.Stop();
             // 结果
@@ -90,9 +91,9 @@ namespace Test
             Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
 
             sw.Reset(); sw.Restart();
-            foreach (var item in list)
+            for (var i = 0; i < count; i++)
             {
-                hp.Free(item);
+                hp.Free(list[i]);
             }
             sw.Stop();
             // 结果

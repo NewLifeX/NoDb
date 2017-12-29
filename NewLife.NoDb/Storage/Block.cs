@@ -7,11 +7,11 @@ namespace NewLife.NoDb.Storage
 {
     /// <summary>数据块</summary>
     [StructLayout(LayoutKind.Sequential)]
-    public class Block : IEquatable<Block>, IComparable<Block>
+    public struct Block : IEquatable<Block>, IComparable<Block>
     {
         #region  属性
-        ///// <summary>空数据库</summary>
-        //public static readonly Block Null = new Block(0, 0);
+        /// <summary>空数据库</summary>
+        public static readonly Block Null = new Block(0, 0);
 
         /// <summary>位置</summary>
         public Int64 Position;

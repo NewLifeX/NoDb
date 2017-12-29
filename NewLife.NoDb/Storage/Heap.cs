@@ -56,10 +56,10 @@ namespace NewLife.NoDb.Storage
         {
             var idx = activeIndex;
             // 当前块不存在、已到末尾、大小不足等，都需要重新查找
-            if (idx < 0 || idx == free.Count - 1 || free[idx].Size < size)
+            if (idx < 0 || idx >= free.Count - 1 || free[idx].Size < size)
             {
                 var start = 0;
-                if (SpeedFirst) start = idx >= 0 && idx + 1 < free.Count - 1 ? idx + 1 : 0;
+                if (SpeedFirst && idx >= 0 && idx + 1 < free.Count - 1) start = idx + 1;
 
                 // 查找一块足够大的分片
                 idx = -1;
@@ -80,6 +80,7 @@ namespace NewLife.NoDb.Storage
             var pos = bk.Position;
             bk.Position += size;
             bk.Size -= size;
+            free[idx] = bk;
 
             if (bk.Size == 0)
             {
@@ -124,6 +125,8 @@ namespace NewLife.NoDb.Storage
                 {
                     p.Position -= bk.Size;
                     p.Size += bk.Size;
+                    free[idx] = p;
+
                     // 已合并
                     merged = true;
                 }
@@ -146,6 +149,7 @@ namespace NewLife.NoDb.Storage
                         p.Size += bk.Size;
                         merged = true;
                     }
+                    free[idx - 1] = p;
                 }
             }
 

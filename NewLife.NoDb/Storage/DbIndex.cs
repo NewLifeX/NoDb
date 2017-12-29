@@ -30,8 +30,10 @@ namespace NewLife.NoDb.Storage
         #region 构造
         public DbIndex(MemoryMappedFile mmf, Block block)
         {
+            if (block.IsNull) throw new ArgumentNullException(nameof(block));
+
             _mmf = mmf ?? throw new ArgumentNullException(nameof(mmf));
-            _block = block ?? throw new ArgumentNullException(nameof(block));
+            _block = block;
 
             // 加载失败后，重建索引区
             if (!Load(mmf, block)) Save(mmf, block);

@@ -31,7 +31,7 @@ namespace NewLife.NoDb
 
         public static Block ReadBlock(this UnmanagedMemoryAccessor accessor, Int32 position)
         {
-            return null;
+            return Block.Null;
         }
 
         public static void CheckAccessControl(this MemoryMappedFile mmf)
