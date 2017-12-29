@@ -23,12 +23,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test3();
+                Test4();
             else
             {
                 try
                 {
-                    Test3();
+                    Test4();
                 }
                 catch (Exception ex)
                 {
@@ -131,6 +131,25 @@ namespace Test
                 }
                 var arr = list.ToArray();
                 //list.Dispose();
+            }
+        }
+
+        static void Test4()
+        {
+            using (var mmf = MemoryMappedFile.CreateFromFile("queue.db".GetFullPath(), FileMode.OpenOrCreate, "queue", 16 * 1024))
+            {
+                var qu = new MemoryQueue<Block>(mmf, 16, 1600, false);
+                for (var i = 0; i < 7; i++)
+                {
+                    qu.Enqueue(new Block(i * 16, 998));
+                }
+                Console.WriteLine(qu.Count);
+                for (var i = 0; i < 6; i++)
+                {
+                    var bk = qu.Dequeue();
+                    Console.WriteLine(bk);
+                }
+                Console.WriteLine(qu.Peek());
             }
         }
     }

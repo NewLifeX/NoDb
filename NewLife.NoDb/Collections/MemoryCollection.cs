@@ -60,14 +60,14 @@ namespace NewLife.NoDb.Collections
             get
             {
                 if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
-                View.Read(index * _Size + 4, out T val);
+                View.Read(GetP(index), out T val);
                 return val;
             }
             set
             {
                 if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
 
-                View.Write(index * _Size + 4, ref value);
+                View.Write(GetP(index), ref value);
             }
         }
 
@@ -78,7 +78,7 @@ namespace NewLife.NoDb.Collections
             var n = Count;
             if (n + 1 >= Capacity) throw new InvalidOperationException("容量不足");
 
-            View.Write(n * _Size + 4, ref item);
+            View.Write(GetP(n), ref item);
             Count = n + 1;
         }
 
@@ -92,7 +92,7 @@ namespace NewLife.NoDb.Collections
             var n = Count;
             if (n + arr.Length >= Capacity) throw new InvalidOperationException("容量不足");
 
-            View.WriteArray(n * _Size + 4, arr, 0, arr.Length);
+            View.WriteArray(GetP(n), arr, 0, arr.Length);
             Count = n + arr.Length;
         }
 
@@ -114,7 +114,7 @@ namespace NewLife.NoDb.Collections
             var n = Count;
             if (n == 0) return;
 
-            View.ReadArray(4, array, arrayIndex, n);
+            View.ReadArray(GetP(0), array, arrayIndex, n);
         }
 
         /// <summary>删除</summary>
@@ -125,8 +125,8 @@ namespace NewLife.NoDb.Collections
             // index 之后前移一位
             for (var i = index + 1; i < n; i++)
             {
-                View.Read(i * _Size + 4, out T val);
-                View.Write((i - 1) * _Size + 4, ref val);
+                View.Read(GetP(i), out T val);
+                View.Write(GetP(i - 1), ref val);
             }
             Count = n - 1;
         }
@@ -138,12 +138,19 @@ namespace NewLife.NoDb.Collections
             var n = Count;
             for (var i = 0; i < n; i++)
             {
-                View.Read(i * _Size + 4, out T val);
+                View.Read(GetP(i), out T val);
                 yield return val;
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        #endregion
+
+        #region 辅助
+        /// <summary>获取位置</summary>
+        /// <param name="idx"></param>
+        /// <returns></returns>
+        protected static Int32 GetP(Int32 idx) { return idx * _Size + 4; }
         #endregion
     }
 }
