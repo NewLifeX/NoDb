@@ -27,15 +27,16 @@ namespace NewLife.NoDb.Storage
         private Int32 activeIndex = -1;
 
         /// <summary>空闲分片。有序</summary>
-        private List<Block> free = new List<Block>();
+        private IList<Block> free;
         #endregion
 
         #region 构造
         /// <summary>实例化数据堆</summary>
         /// <param name="bk"></param>
-        public Heap(Block bk)
+        /// <param name="freeList"></param>
+        public Heap(Block bk, IList<Block> freeList = null)
         {
-            // 建立新的头部
+            free = freeList ?? new List<Block>();
 
             free.Add(bk);
             Total = bk.Size;

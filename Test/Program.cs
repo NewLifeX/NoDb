@@ -129,6 +129,7 @@ namespace Test
                 {
                     Console.WriteLine(item);
                 }
+                var arr = list.ToArray();
                 //list.Dispose();
             }
         }

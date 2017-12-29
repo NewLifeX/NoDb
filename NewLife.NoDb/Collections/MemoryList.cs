@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace NewLife.NoDb.Collections
@@ -45,7 +46,21 @@ namespace NewLife.NoDb.Collections
         /// <summary>索引器</summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public T this[Int32 index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public T this[Int32 index]
+        {
+            get
+            {
+                if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
+                View.Read(index * _Size + 4, out T val);
+                return val;
+            }
+            set
+            {
+                if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
+
+                View.Write(index * _Size + 4, ref value);
+            }
+        }
 
         /// <summary>是否只读</summary>
         public Boolean IsReadOnly => false;
@@ -59,6 +74,20 @@ namespace NewLife.NoDb.Collections
 
             View.Write(n * _Size + 4, ref item);
             Count = n + 1;
+        }
+
+        /// <summary>批量插入</summary>
+        /// <param name="collection"></param>
+        public void AddRange(IEnumerable<T> collection)
+        {
+            var arr = collection as T[] ?? collection.ToArray();
+            if (arr.Length == 0) return;
+
+            var n = Count;
+            if (n + arr.Length >= Capacity) throw new InvalidOperationException("容量不足");
+
+            View.WriteArray(n * _Size + 4, arr, 0, arr.Length);
+            Count = n + arr.Length;
         }
 
         /// <summary>清空</summary>
@@ -77,12 +106,17 @@ namespace NewLife.NoDb.Collections
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, Int32 arrayIndex)
         {
+            //var n = Count;
+            //for (Int32 i = 0, j = arrayIndex; i < n && j < array.Length; i++, j++)
+            //{
+            //    View.Read(i * _Size + 4, out T val);
+            //    array[j] = val;
+            //}
+
             var n = Count;
-            for (Int32 i = 0, j = arrayIndex; i < n && j < array.Length; i++, j++)
-            {
-                View.Read(i * _Size + 4, out T val);
-                array[j] = val;
-            }
+            if (n == 0) return;
+
+            View.ReadArray(4, array, arrayIndex, n);
         }
 
         /// <summary>查找</summary>
