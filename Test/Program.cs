@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.MemoryMappedFiles;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.NoDb;
+using NewLife.NoDb.Collections;
 using NewLife.NoDb.Storage;
 using NewLife.Reflection;
 using NewLife.Security;
@@ -20,12 +23,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test2();
+                Test3();
             else
             {
                 try
                 {
-                    Test2();
+                    Test3();
                 }
                 catch (Exception ex)
                 {
@@ -106,6 +109,28 @@ namespace Test
             //var db = new Database("test.db");
             //Console.WriteLine(db.Version);
 
+        }
+
+        static void Test3()
+        {
+            using (var mmf = MemoryMappedFile.CreateFromFile("list.db".GetFullPath(), FileMode.OpenOrCreate, "list", 16 * 1024))
+            {
+                var list = new MemoryList<Block>(mmf, 16, 1600, false);
+                for (var i = 0; i < 7; i++)
+                {
+                    list.Add(new Block(i * 16, 998));
+                }
+                Console.WriteLine(list.Count);
+                list.Insert(2, new Block(333, 444));
+                var idx = list.IndexOf(new Block(32, 998));
+                Console.WriteLine(idx);
+                list.RemoveAt(5);
+                foreach (var item in list)
+                {
+                    Console.WriteLine(item);
+                }
+                //list.Dispose();
+            }
         }
     }
 }
