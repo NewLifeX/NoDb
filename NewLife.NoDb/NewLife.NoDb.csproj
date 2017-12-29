@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\MemoryCollection.cs" />
+    <Compile Include="Collections\MemoryQueue.cs" />
+    <Compile Include="Collections\MemoryStack.cs" />
     <Compile Include="Collections\MemoryList.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="DbHeader.cs" />
