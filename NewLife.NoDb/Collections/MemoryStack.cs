@@ -9,15 +9,15 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>当前元素个数</summary>
-        public Int32 Count { get => View.ReadInt32(0); protected set => View.Write(0, value); }
+        public Int64 Count { get => View.ReadInt64(0); protected set => View.Write(0, value); }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int32 GetLength() => Count;
+        protected override Int64 GetLength() => Count;
         #endregion
 
         #region 构造
-        static MemoryStack() { _HeadSize = 4; }
+        static MemoryStack() { _HeadSize = 8; }
 
         /// <summary>实例化一个内存栈</summary>
         /// <param name="mmf"></param>
@@ -31,6 +31,9 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 基本方法
+        /// <summary>元素个数</summary>
+        Int32 IReadOnlyCollection<T>.Count => (Int32)Count;
+
         /// <summary>获取栈顶</summary>
         /// <returns></returns>
         public T Peek() { return this[Count - 1]; }

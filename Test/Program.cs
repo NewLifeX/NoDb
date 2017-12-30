@@ -136,14 +136,14 @@ namespace Test
 
         static void Test4()
         {
-            var count = 100_000_000;
+            var count = 100_000_000L;
             var sw = Stopwatch.StartNew();
             using (var mmf = MemoryMappedFile.CreateFromFile("queue.db".GetFullPath(), FileMode.OpenOrCreate, "queue", 32 * 1024 * 1024 * 1024L))
             {
                 var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false);
                 Console.WriteLine("队列总数：{0:n0}", qu.Count);
                 Console.WriteLine("准备插入：{0:n0}", count);
-                for (var i = 0; i < count; i++)
+                for (var i = 0L; i < count; i++)
                 {
                     qu.Enqueue(new Block(i * 16, 998));
                 }

@@ -9,11 +9,11 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>长度</summary>
-        public Int32 Length { get; }
+        public Int64 Length { get; }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int32 GetLength() => Length;
+        protected override Int64 GetLength() => Length;
         #endregion
 
         #region 构造
@@ -23,10 +23,9 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        /// <param name="init">是否初始化为空</param>
-        public MemoryArray(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true) : base(mmf, offset, size)
+        public MemoryArray(MemoryMappedFile mmf, Int64 offset, Int64 size) : base(mmf, offset, size)
         {
-            if (init) Clear();
+            Length = Capacity;
         }
         #endregion
 
@@ -37,10 +36,14 @@ namespace NewLife.NoDb.Collections
             var arr = new T[Length];
             View.WriteArray(0, arr, 0, arr.Length);
         }
+
+        T IList<T>.this[Int32 index] { get => this[index]; set => this[index] = value; }
+
+        Int32 IList<T>.IndexOf(T item) { return (Int32)IndexOf(item); }
         #endregion
 
         #region IList<T>接口
-        Int32 ICollection<T>.Count => Length;
+        Int32 ICollection<T>.Count => (Int32)Length;
 
         Boolean ICollection<T>.IsReadOnly => true;
 

@@ -10,15 +10,15 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>当前元素个数</summary>
-        public Int32 Count { get => View.ReadInt32(0); protected set => View.Write(0, value); }
+        public Int64 Count { get => View.ReadInt64(0); protected set => View.Write(0, value); }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int32 GetLength() => Count;
+        protected override Int64 GetLength() => Count;
         #endregion
 
         #region 构造
-        static MemoryList() { _HeadSize = 4; }
+        static MemoryList() { _HeadSize = 8; }
 
         /// <summary>实例化一个内存列表</summary>
         /// <param name="mmf"></param>
@@ -33,8 +33,17 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 基本方法
+        /// <summary>元素个数</summary>
+        Int32 ICollection<T>.Count => (Int32)Count;
+
         /// <summary>是否只读</summary>
-        public Boolean IsReadOnly => false;
+        Boolean ICollection<T>.IsReadOnly => false;
+
+        T IList<T>.this[Int32 index] { get => this[index]; set => this[index] = value; }
+
+        Int32 IList<T>.IndexOf(T item) { return (Int32)IndexOf(item); }
+
+        void IList<T>.RemoveAt(Int32 index) { RemoveAt(index); }
 
         /// <summary>添加元素</summary>
         /// <param name="item"></param>
@@ -98,7 +107,7 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>删除</summary>
         /// <param name="index"></param>
-        public void RemoveAt(Int32 index)
+        public void RemoveAt(Int64 index)
         {
             var n = Count;
             // index 之后前移一位

@@ -9,21 +9,21 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>当前元素个数</summary>
-        public Int32 Count { get => View.ReadInt32(0); private set => View.Write(0, value); }
+        public Int64 Count { get => View.ReadInt64(0); private set => View.Write(0, value); }
 
         /// <summary>读取指针</summary>
-        public Int32 ReadPosition { get => View.ReadInt32(4); private set => View.Write(4, value); }
+        public Int64 ReadPosition { get => View.ReadInt64(8); private set => View.Write(8, value); }
 
         /// <summary>写入指针</summary>
-        public Int32 WritePosition { get => View.ReadInt32(8); private set => View.Write(8, value); }
+        public Int64 WritePosition { get => View.ReadInt64(16); private set => View.Write(16, value); }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int32 GetLength() => Count;
+        protected override Int64 GetLength() => Count;
         #endregion
 
         #region 构造
-        static MemoryQueue() { _HeadSize = 12; }
+        static MemoryQueue() { _HeadSize = 24; }
 
         /// <summary>实例化一个内存队列</summary>
         /// <param name="mmf"></param>
@@ -37,6 +37,9 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 基本方法
+        /// <summary>元素个数</summary>
+        Int32 IReadOnlyCollection<T>.Count => (Int32)Count;
+
         /// <summary>获取栈顶</summary>
         /// <returns></returns>
         public T Peek()
@@ -88,7 +91,7 @@ namespace NewLife.NoDb.Collections
         {
             var n = Count;
             var p = ReadPosition;
-            for (var i = 0; i < n; i++)
+            for (var i = 0L; i < n; i++)
             {
                 View.Read<T>(GetP(p), out var val);
                 yield return val;

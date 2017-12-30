@@ -14,7 +14,7 @@ namespace NewLife.NoDb.Collections
         public MemoryMappedViewAccessor View { get; }
 
         /// <summary>容量</summary>
-        public Int32 Capacity { get; }
+        public Int64 Capacity { get; }
         #endregion
 
         #region 构造
@@ -28,7 +28,7 @@ namespace NewLife.NoDb.Collections
 
             // 根据视图大小计算出可存储对象个数
             var n = size - _HeadSize;
-            Capacity = (Int32)(n / _ItemSize);
+            Capacity = n / _ItemSize;
         }
 
         /// <summary>销毁</summary>
@@ -45,7 +45,7 @@ namespace NewLife.NoDb.Collections
         /// <summary>索引器</summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public T this[Int32 index]
+        public T this[Int64 index]
         {
             get
             {
@@ -69,10 +69,10 @@ namespace NewLife.NoDb.Collections
         /// <summary>查找</summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public Int32 IndexOf(T item)
+        public Int64 IndexOf(T item)
         {
             var n = GetLength();
-            for (var i = 0; i < n; i++)
+            for (var i = 0L; i < n; i++)
             {
                 View.Read<T>(GetP(i), out var val);
                 if (Equals(val, item)) return i;
@@ -89,7 +89,9 @@ namespace NewLife.NoDb.Collections
             var n = GetLength();
             if (n == 0) return;
 
-            View.ReadArray(GetP(0), array, arrayIndex, n);
+            if (n > array.Length) n = array.Length;
+
+            View.ReadArray(GetP(0), array, arrayIndex, (Int32)n);
         }
 
         /// <summary>枚举数</summary>
@@ -97,7 +99,7 @@ namespace NewLife.NoDb.Collections
         public virtual IEnumerator<T> GetEnumerator()
         {
             var n = GetLength();
-            for (var i = 0; i < n; i++)
+            for (var i = 0L; i < n; i++)
             {
                 View.Read<T>(GetP(i), out var val);
                 yield return val;
@@ -117,11 +119,11 @@ namespace NewLife.NoDb.Collections
         /// <summary>获取位置</summary>
         /// <param name="idx"></param>
         /// <returns></returns>
-        protected static Int32 GetP(Int32 idx) { return idx * _ItemSize + _HeadSize; }
+        protected static Int64 GetP(Int64 idx) { return idx * _ItemSize + _HeadSize; }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected abstract Int32 GetLength();
+        protected abstract Int64 GetLength();
         #endregion
     }
 }
