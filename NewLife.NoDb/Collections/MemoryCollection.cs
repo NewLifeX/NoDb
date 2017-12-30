@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace NewLife.NoDb.Collections
 {
     /// <summary>内存集合</summary>
-    public class MemoryCollection<T> : DisposeBase, IEnumerable, IEnumerable<T> where T : struct
+    public abstract class MemoryCollection<T> : DisposeBase, IEnumerable, IEnumerable<T> where T : struct
     {
         #region 属性
         /// <summary>访问器</summary>
@@ -16,12 +15,6 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>容量</summary>
         public Int32 Capacity { get; }
-
-        /// <summary>当前元素个数</summary>
-        public Int32 Count { get => View.ReadInt32(0); protected set => View.Write(0, value); }
-
-        /// <summary>元素大小</summary>
-        protected static Int32 _Size = Marshal.SizeOf(typeof(T));
         #endregion
 
         #region 构造
@@ -29,16 +22,13 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        /// <param name="init">是否初始化为空</param>
-        public MemoryCollection(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true)
+        public MemoryCollection(MemoryMappedFile mmf, Int64 offset, Int64 size)
         {
             View = mmf.CreateViewAccessor(offset, size);
 
             // 根据视图大小计算出可存储对象个数
-            var n = size - 4;
-            Capacity = (Int32)(n / _Size);
-
-            if (init) Count = 0;
+            var n = size - _HeadSize;
+            Capacity = (Int32)(n / _ItemSize);
         }
 
         /// <summary>销毁</summary>
@@ -59,79 +49,57 @@ namespace NewLife.NoDb.Collections
         {
             get
             {
-                if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
-                View.Read(GetP(index), out T val);
+                if (index >= GetLength()) throw new ArgumentOutOfRangeException(nameof(index));
+                View.Read<T>(GetP(index), out var val);
                 return val;
             }
             set
             {
-                if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
+                if (index >= GetLength()) throw new ArgumentOutOfRangeException(nameof(index));
 
                 View.Write(GetP(index), ref value);
             }
         }
 
-        /// <summary>添加元素</summary>
+        /// <summary>是否包含</summary>
         /// <param name="item"></param>
-        public void Add(T item)
+        /// <returns></returns>
+        public Boolean Contains(T item) { return IndexOf(item) >= 0; }
+
+        /// <summary>查找</summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public Int32 IndexOf(T item)
         {
-            var n = Count;
-            if (n + 1 >= Capacity) throw new InvalidOperationException("容量不足");
+            var n = GetLength();
+            for (var i = 0; i < n; i++)
+            {
+                View.Read<T>(GetP(i), out var val);
+                if (Equals(val, item)) return i;
+            }
 
-            View.Write(GetP(n), ref item);
-            Count = n + 1;
+            return -1;
         }
-
-        /// <summary>批量插入</summary>
-        /// <param name="collection"></param>
-        public void AddRange(IEnumerable<T> collection)
-        {
-            var arr = collection as T[] ?? collection.ToArray();
-            if (arr.Length == 0) return;
-
-            var n = Count;
-            if (n + arr.Length >= Capacity) throw new InvalidOperationException("容量不足");
-
-            View.WriteArray(GetP(n), arr, 0, arr.Length);
-            Count = n + arr.Length;
-        }
-
-        /// <summary>清空</summary>
-        public void Clear() { Count = 0; }
 
         /// <summary>拷贝</summary>
         /// <param name="array"></param>
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, Int32 arrayIndex)
         {
-            var n = Count;
+            var n = GetLength();
             if (n == 0) return;
 
             View.ReadArray(GetP(0), array, arrayIndex, n);
         }
 
-        /// <summary>删除</summary>
-        /// <param name="index"></param>
-        public void RemoveAt(Int32 index)
-        {
-            var n = Count;
-            // index 之后前移一位
-            for (var i = index + 1; i < n; i++)
-            {
-                View.Read(GetP(i), out T val);
-                View.Write(GetP(i - 1), ref val);
-            }
-            Count = n - 1;
-        }
-
         /// <summary>枚举数</summary>
         /// <returns></returns>
-        public IEnumerator<T> GetEnumerator()
+        public virtual IEnumerator<T> GetEnumerator()
         {
-            var n = Count;
+            var n = GetLength();
             for (var i = 0; i < n; i++)
             {
-                View.Read(GetP(i), out T val);
+                View.Read<T>(GetP(i), out var val);
                 yield return val;
             }
         }
@@ -140,10 +108,20 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 辅助
+        /// <summary>元素大小</summary>
+        protected static Int32 _HeadSize = 0;
+
+        /// <summary>元素大小</summary>
+        private static Int32 _ItemSize = Marshal.SizeOf(typeof(T));
+
         /// <summary>获取位置</summary>
         /// <param name="idx"></param>
         /// <returns></returns>
-        protected static Int32 GetP(Int32 idx) { return idx * _Size + 4; }
+        protected static Int32 GetP(Int32 idx) { return idx * _ItemSize + _HeadSize; }
+
+        /// <summary>获取集合大小</summary>
+        /// <returns></returns>
+        protected abstract Int32 GetLength();
         #endregion
     }
 }
