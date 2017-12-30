@@ -136,21 +136,21 @@ namespace Test
 
         static void Test4()
         {
-            using (var mmf = MemoryMappedFile.CreateFromFile("queue.db".GetFullPath(), FileMode.OpenOrCreate, "queue", 16 * 1024))
+            var count = 100_000_000;
+            var sw = Stopwatch.StartNew();
+            using (var mmf = MemoryMappedFile.CreateFromFile("queue.db".GetFullPath(), FileMode.OpenOrCreate, "queue", 32 * 1024 * 1024 * 1024L))
             {
-                var qu = new MemoryQueue<Block>(mmf, 16, 1600, false);
-                for (var i = 0; i < 7; i++)
+                var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false);
+                Console.WriteLine("队列总数：{0:n0}", qu.Count);
+                Console.WriteLine("准备插入：{0:n0}", count);
+                for (var i = 0; i < count; i++)
                 {
                     qu.Enqueue(new Block(i * 16, 998));
                 }
-                Console.WriteLine(qu.Count);
-                for (var i = 0; i < 6; i++)
-                {
-                    var bk = qu.Dequeue();
-                    Console.WriteLine(bk);
-                }
+                Console.WriteLine("队列总数：{0:n0}", qu.Count);
                 Console.WriteLine(qu.Peek());
             }
+            Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
         }
     }
 }
