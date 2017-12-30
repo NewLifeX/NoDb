@@ -82,7 +82,7 @@ namespace NewLife.NoDb.Collections
             var n = Length;
             for (var i = 0; i < n; i++)
             {
-                View.Read(i * _Size + 4, out T val);
+                View.Read(GetP(i), out T val);
                 if (Equals(val, item)) return i;
             }
 

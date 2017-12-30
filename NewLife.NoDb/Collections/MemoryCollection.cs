@@ -104,13 +104,6 @@ namespace NewLife.NoDb.Collections
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, Int32 arrayIndex)
         {
-            //var n = Count;
-            //for (Int32 i = 0, j = arrayIndex; i < n && j < array.Length; i++, j++)
-            //{
-            //    View.Read(i * _Size + 4, out T val);
-            //    array[j] = val;
-            //}
-
             var n = Count;
             if (n == 0) return;
 

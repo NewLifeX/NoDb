@@ -119,7 +119,7 @@ namespace NewLife.NoDb.Collections
             var n = Count;
             for (var i = 0; i < n; i++)
             {
-                View.Read(i * _Size + 4, out T val);
+                View.Read(GetP(i), out T val);
                 if (Equals(val, item)) return i;
             }
 
@@ -137,11 +137,11 @@ namespace NewLife.NoDb.Collections
             // index 之后的元素后移一位
             for (var i = n - 1; i >= index; i--)
             {
-                View.Read(i * _Size + 4, out T val);
-                View.Write((i + 1) * _Size + 4, ref val);
+                View.Read(GetP(i), out T val);
+                View.Write(GetP(i + 1), ref val);
             }
 
-            View.Write(index * _Size + 4, ref item);
+            View.Write(GetP(index), ref item);
             Count = n + 1;
         }
 
