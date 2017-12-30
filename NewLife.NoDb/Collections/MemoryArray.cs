@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace NewLife.NoDb.Collections
 {
     /// <summary>内存数组</summary>
-    public class MemoryArray<T> : DisposeBase, IReadOnlyList<T> where T : struct
+    public class MemoryArray<T> : DisposeBase, IList<T> where T : struct
     {
         #region 属性
         /// <summary>访问器</summary>
@@ -15,8 +15,6 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>长度</summary>
         public Int32 Length { get; }
-
-        Int32 IReadOnlyCollection<T>.Count => Length;
 
         /// <summary>元素大小</summary>
         protected static Int32 _Size = Marshal.SizeOf(typeof(T));
@@ -76,6 +74,37 @@ namespace NewLife.NoDb.Collections
             View.WriteArray(0, arr, 0, arr.Length);
         }
 
+        /// <summary>查找</summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public Int32 IndexOf(T item)
+        {
+            var n = Length;
+            for (var i = 0; i < n; i++)
+            {
+                View.Read(i * _Size + 4, out T val);
+                if (Equals(val, item)) return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>是否包含</summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public Boolean Contains(T item) { return IndexOf(item) >= 0; }
+
+        /// <summary>拷贝</summary>
+        /// <param name="array"></param>
+        /// <param name="arrayIndex"></param>
+        public void CopyTo(T[] array, Int32 arrayIndex)
+        {
+            var n = Length;
+            if (n == 0) return;
+
+            View.ReadArray(GetP(0), array, arrayIndex, n);
+        }
+
         /// <summary>枚举数</summary>
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
@@ -89,6 +118,20 @@ namespace NewLife.NoDb.Collections
         }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        #endregion
+
+        #region IList<T>接口
+        Int32 ICollection<T>.Count => Length;
+
+        Boolean ICollection<T>.IsReadOnly => true;
+
+        void IList<T>.Insert(Int32 index, T item) => throw new NotImplementedException();
+
+        void IList<T>.RemoveAt(Int32 index) => throw new NotImplementedException();
+
+        void ICollection<T>.Add(T item) => throw new NotImplementedException();
+
+        Boolean ICollection<T>.Remove(T item) => throw new NotImplementedException();
         #endregion
 
         #region 辅助
