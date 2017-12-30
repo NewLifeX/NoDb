@@ -34,7 +34,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        /// <param name="init">是否初始化为空列表</param>
+        /// <param name="init">是否初始化为空</param>
         public MemoryQueue(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true)
         {
             View = mmf.CreateViewAccessor(offset, size);
@@ -44,6 +44,15 @@ namespace NewLife.NoDb.Collections
             Capacity = (Int32)(n / _Size);
 
             if (init) ReadPosition = WritePosition = 0;
+        }
+
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
+        protected override void OnDispose(Boolean disposing)
+        {
+            base.OnDispose(disposing);
+
+            View.TryDispose();
         }
         #endregion
 

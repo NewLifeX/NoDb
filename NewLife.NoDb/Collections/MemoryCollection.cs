@@ -29,7 +29,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        /// <param name="init">是否初始化为空列表</param>
+        /// <param name="init">是否初始化为空</param>
         public MemoryCollection(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true)
         {
             View = mmf.CreateViewAccessor(offset, size);
