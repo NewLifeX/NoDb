@@ -9,8 +9,25 @@ using NewLife.NoDb.Storage;
 namespace NewLife.NoDb
 {
     /// <summary>帮助类</summary>
-    static class Helper
+    public static class Helper
     {
+        public static MemoryMappedFile CreateFromFile(String file)
+        {
+            file = file.GetFullPath();
+            var name = Path.GetFileNameWithoutExtension(file);
+
+            //var capacity = 4 * 1024 * 1024;
+            //if (file.AsFile().Exists) capacity = 0;
+            //_mmf = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate, name, capacity, MemoryMappedFileAccess.ReadWrite);
+
+            // 使用文件流可以控制共享读写，让别的进程也可以读写文件
+            var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
+            if (fs.Length == 0) fs.SetLength(1024);
+            var _mmf = MemoryMappedFile.CreateFromFile(fs, name, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, false);
+
+            return _mmf;
+        }
+
         public static Stream CreateStream(this MemoryMappedFile mmf, Block block)
         {
             return mmf.CreateViewStream(block.Position, block.Size);

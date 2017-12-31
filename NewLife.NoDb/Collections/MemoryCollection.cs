@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
 {
@@ -22,9 +23,15 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        public MemoryCollection(MemoryMappedFile mmf, Int64 offset, Int64 size)
+        public MemoryCollection(MemoryFile mmf, Int64 offset, Int64 size)
         {
-            View = mmf.CreateViewAccessor(offset, size);
+            if (offset == 0 && size == 0)
+            {
+                View = mmf.CreateView();
+                size = View.Capacity;
+            }
+            else
+                View = mmf.CreateView(offset, size);
 
             // 根据视图大小计算出可存储对象个数
             var n = size - _HeadSize;

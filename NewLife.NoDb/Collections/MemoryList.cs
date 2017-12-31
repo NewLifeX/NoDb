@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
 {
@@ -25,7 +26,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="offset"></param>
         /// <param name="size"></param>
         /// <param name="init">是否初始化为空</param>
-        public MemoryList(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true)
+        public MemoryList(MemoryFile mmf, Int64 offset, Int64 size, Boolean init = true)
             : base(mmf, offset, size)
         {
             if (init) Count = 0;

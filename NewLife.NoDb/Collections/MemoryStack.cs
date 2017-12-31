@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
+using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
 {
@@ -24,7 +25,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="offset"></param>
         /// <param name="size"></param>
         /// <param name="init">是否初始化为空</param>
-        public MemoryStack(MemoryMappedFile mmf, Int64 offset, Int64 size, Boolean init = true) : base(mmf, offset, size)
+        public MemoryStack(MemoryFile mmf, Int64 offset, Int64 size, Boolean init = true) : base(mmf, offset, size)
         {
             if (init) Count = 0;
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
+using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
 {
@@ -23,7 +24,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="mmf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        public MemoryArray(MemoryMappedFile mmf, Int64 offset, Int64 size) : base(mmf, offset, size)
+        public MemoryArray(MemoryFile mmf, Int64 offset, Int64 size) : base(mmf, offset, size)
         {
             Length = Capacity;
         }

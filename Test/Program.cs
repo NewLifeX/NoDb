@@ -7,6 +7,7 @@ using NewLife.Caching;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;
+using NewLife.NoDb.IO;
 using NewLife.NoDb.Storage;
 using NewLife.Reflection;
 using NewLife.Security;
@@ -113,7 +114,7 @@ namespace Test
 
         static void Test3()
         {
-            using (var mmf = MemoryMappedFile.CreateFromFile("list.db".GetFullPath(), FileMode.OpenOrCreate, "list", 16 * 1024))
+            using (var mmf = new MemoryFile("list.db"))
             {
                 var list = new MemoryList<Block>(mmf, 16, 1600, false);
                 for (var i = 0; i < 7; i++)
@@ -136,9 +137,9 @@ namespace Test
 
         static void Test4()
         {
-            var count = 100_000_000L;
+            var count = 10_000_000L;
             var sw = Stopwatch.StartNew();
-            using (var mmf = MemoryMappedFile.CreateFromFile("queue.db".GetFullPath(), FileMode.OpenOrCreate, "queue", 32 * 1024 * 1024 * 1024L))
+            using (var mmf = new MemoryFile("queue.db"))
             {
                 var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false);
                 Console.WriteLine("队列总数：{0:n0}", qu.Count);
