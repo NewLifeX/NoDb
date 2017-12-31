@@ -57,6 +57,7 @@
     <Compile Include="DbHeader.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="IO\MemoryFile.cs" />
+    <Compile Include="IO\MemoryView.cs" />
     <Compile Include="Storage\DbIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\Block.cs" />

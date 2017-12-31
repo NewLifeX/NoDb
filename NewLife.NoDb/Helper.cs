@@ -67,35 +67,35 @@ namespace NewLife.NoDb
             mmf.SetAccessControl(msc);
         }
 
-        public static unsafe Byte[] ReadBytes(this MemoryMappedViewAccessor view, Int64 offset, Int32 num)
-        {
-            var ptr = (Byte*)0;
-            view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+        //public static unsafe Byte[] ReadBytes(this MemoryMappedViewAccessor view, Int64 offset, Int32 num)
+        //{
+        //    var ptr = (Byte*)0;
+        //    view.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
 
-            var p = new IntPtr(ptr);
-            p = new IntPtr(p.ToInt64() + offset);
-            var arr = new Byte[num];
-            Marshal.Copy(p, arr, 0, num);
+        //    var p = new IntPtr(ptr);
+        //    p = new IntPtr(p.ToInt64() + offset);
+        //    var arr = new Byte[num];
+        //    Marshal.Copy(p, arr, 0, num);
 
-            view.SafeMemoryMappedViewHandle.ReleasePointer();
-            return arr;
+        //    view.SafeMemoryMappedViewHandle.ReleasePointer();
+        //    return arr;
 
-            //var arr = new Byte[num];
-            //view.ReadArray(offset, arr, 0, num);
+        //    //var arr = new Byte[num];
+        //    //view.ReadArray(offset, arr, 0, num);
 
-            //return arr;
-        }
+        //    //return arr;
+        //}
 
-        public static unsafe void WriteBytes(this MemoryMappedViewAccessor accessor, Int64 offset, Byte[] data)
-        {
-            var ptr = (Byte*)0;
-            accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+        //public static unsafe void WriteBytes(this MemoryMappedViewAccessor accessor, Int64 offset, Byte[] data)
+        //{
+        //    var ptr = (Byte*)0;
+        //    accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
 
-            var p = new IntPtr(ptr);
-            p = new IntPtr(p.ToInt64() + offset);
-            Marshal.Copy(data, 0, p, data.Length);
+        //    var p = new IntPtr(ptr);
+        //    p = new IntPtr(p.ToInt64() + offset);
+        //    Marshal.Copy(data, 0, p, data.Length);
 
-            accessor.SafeMemoryMappedViewHandle.ReleasePointer();
-        }
+        //    accessor.SafeMemoryMappedViewHandle.ReleasePointer();
+        //}
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
 using NewLife.NoDb.IO;
 
@@ -15,19 +14,18 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int64 GetLength() => Count;
+        protected override Int64 GetCount() => Count;
         #endregion
 
         #region 构造
         static MemoryList() { _HeadSize = 8; }
 
         /// <summary>实例化一个内存列表</summary>
-        /// <param name="mmf"></param>
-        /// <param name="offset"></param>
-        /// <param name="size"></param>
+        /// <param name="mf">内存文件</param>
+        /// <param name="offset">内存偏移</param>
+        /// <param name="size">内存大小。为0时自动增长</param>
         /// <param name="init">是否初始化为空</param>
-        public MemoryList(MemoryFile mmf, Int64 offset, Int64 size, Boolean init = true)
-            : base(mmf, offset, size)
+        public MemoryList(MemoryFile mf, Int64 offset = 0, Int64 size = 0, Boolean init = true) : base(mf, offset, size)
         {
             if (init) Count = 0;
         }

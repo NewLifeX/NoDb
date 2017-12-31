@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
+using System.Runtime.InteropServices;
 using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
@@ -14,17 +14,17 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int64 GetLength() => Length;
+        protected override Int64 GetCount() => Length;
         #endregion
 
         #region 构造
         static MemoryArray() { _HeadSize = 0; }
 
         /// <summary>实例化一个内存数组</summary>
-        /// <param name="mmf"></param>
-        /// <param name="offset"></param>
-        /// <param name="size"></param>
-        public MemoryArray(MemoryFile mmf, Int64 offset, Int64 size) : base(mmf, offset, size)
+        /// <param name="length">数组长度</param>
+        /// <param name="mf">内存文件</param>
+        /// <param name="offset">内存偏移</param>
+        public MemoryArray(Int64 length, MemoryFile mf, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T)))
         {
             Length = Capacity;
         }

@@ -12,7 +12,7 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>访问器</summary>
-        public MemoryMappedViewAccessor View { get; }
+        public MemoryView View { get; }
 
         /// <summary>容量</summary>
         public Int64 Capacity { get; }
@@ -20,18 +20,18 @@ namespace NewLife.NoDb.Collections
 
         #region 构造
         /// <summary>实例化一个内存列表</summary>
-        /// <param name="mmf"></param>
-        /// <param name="offset"></param>
-        /// <param name="size"></param>
-        public MemoryCollection(MemoryFile mmf, Int64 offset, Int64 size)
+        /// <param name="mf">内存文件</param>
+        /// <param name="offset">内存偏移</param>
+        /// <param name="size">内存大小。为0时自动增长</param>
+        public MemoryCollection(MemoryFile mf, Int64 offset, Int64 size)
         {
             if (offset == 0 && size == 0)
             {
-                View = mmf.CreateView();
+                View = mf.CreateView();
                 size = View.Capacity;
             }
             else
-                View = mmf.CreateView(offset, size);
+                View = mf.CreateView(offset, size);
 
             // 根据视图大小计算出可存储对象个数
             var n = size - _HeadSize;
@@ -56,13 +56,13 @@ namespace NewLife.NoDb.Collections
         {
             get
             {
-                if (index >= GetLength()) throw new ArgumentOutOfRangeException(nameof(index));
+                if (index >= GetCount()) throw new ArgumentOutOfRangeException(nameof(index));
                 View.Read<T>(GetP(index), out var val);
                 return val;
             }
             set
             {
-                if (index >= GetLength()) throw new ArgumentOutOfRangeException(nameof(index));
+                if (index >= GetCount()) throw new ArgumentOutOfRangeException(nameof(index));
 
                 View.Write(GetP(index), ref value);
             }
@@ -78,7 +78,7 @@ namespace NewLife.NoDb.Collections
         /// <returns></returns>
         public Int64 IndexOf(T item)
         {
-            var n = GetLength();
+            var n = GetCount();
             for (var i = 0L; i < n; i++)
             {
                 View.Read<T>(GetP(i), out var val);
@@ -93,7 +93,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, Int32 arrayIndex)
         {
-            var n = GetLength();
+            var n = GetCount();
             if (n == 0) return;
 
             if (n > array.Length) n = array.Length;
@@ -105,7 +105,7 @@ namespace NewLife.NoDb.Collections
         /// <returns></returns>
         public virtual IEnumerator<T> GetEnumerator()
         {
-            var n = GetLength();
+            var n = GetCount();
             for (var i = 0L; i < n; i++)
             {
                 View.Read<T>(GetP(i), out var val);
@@ -130,7 +130,7 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected abstract Int64 GetLength();
+        protected abstract Int64 GetCount();
         #endregion
     }
 }
