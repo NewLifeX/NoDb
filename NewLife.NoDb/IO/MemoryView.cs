@@ -25,7 +25,13 @@ namespace NewLife.NoDb.IO
         /// <summary>最大容量</summary>
         public Int64 Capacity { get; private set; }
 
+        /// <summary>视图</summary>
         private MemoryMappedViewAccessor _view;
+
+        /// <summary>版本</summary>
+        private Int32 _Version;
+
+        private Object SyncRoot = new Object();
         #endregion
 
         #region 构造
@@ -51,7 +57,7 @@ namespace NewLife.NoDb.IO
         }
         #endregion
 
-        #region 读写
+        #region 视图扩容
         /// <summary>获取视图，自动扩大</summary>
         /// <param name="offset">内存偏移</param>
         /// <param name="size">内存大小</param>
@@ -60,32 +66,43 @@ namespace NewLife.NoDb.IO
         {
             // 如果在已有范围内，则直接返回
             var maxsize = offset + size;
-            if (_view != null && maxsize <= Size) return _view;
-
-            // 扩大视图
-            size = maxsize + Offset;
-            if (size < 1024)
-                size = 1024;
-            else
+            if (_view != null && maxsize <= Size && _Version == File.Version) return _view;
+            lock (SyncRoot)
             {
-                var n = size % 1024;
-                if (n > 0) size += 1024 - n;
+                if (_view != null && maxsize <= Size && _Version == File.Version) return _view;
+
+                // 扩大视图
+                size = maxsize + Offset;
+                if (size < 1024)
+                    size = 1024;
+                else
+                {
+                    var n = size % 1024;
+                    if (n > 0) size += 1024 - n;
+                }
+
+                Size = size - Offset;
+
+                // 容量检查
+                if (Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
+
+                // 销毁旧的
+                _view.TryDispose();
+
+                // 映射文件扩容
+                File.CheckCapacity(Offset + Size);
+
+                _view = File.Map.CreateViewAccessor(Offset, Size);
+
+                // 版本必须一直，如果内存文件扩容后版本改变，这里也要重新生成视图
+                _Version = File.Version;
+
+                return _view;
             }
-
-            Size = size - Offset;
-
-            // 容量检查
-            if (Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
-
-            // 销毁旧的
-            _view.TryDispose();
-
-            // 映射文件扩容
-            File.CheckCapacity(Offset + Size);
-
-            return _view = File.Map.CreateViewAccessor(Offset, Size);
         }
+        #endregion
 
+        #region 读写
         /// <summary>读取长整数</summary>
         /// <param name="position"></param>
         /// <returns></returns>

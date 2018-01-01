@@ -24,6 +24,10 @@ namespace NewLife.NoDb.IO
         /// <summary>容量</summary>
         public Int64 Capacity { get; private set; }
 
+        private volatile Int32 _Version;
+        /// <summary>版本</summary>
+        public Int32 Version => _Version;
+
         private Object SyncRoot = new Object();
         #endregion
 
@@ -104,6 +108,9 @@ namespace NewLife.NoDb.IO
                     // 最大容量为0表示使用文件流最大值
                     Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
                 }
+
+                //Interlocked.Increment(ref _Version);
+                _Version++;
             }
 
             return true;
