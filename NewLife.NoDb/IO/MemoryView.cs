@@ -60,10 +60,10 @@ namespace NewLife.NoDb.IO
         {
             // 如果在已有范围内，则直接返回
             var maxsize = offset + size;
-            if (_view != null && maxsize <= Offset + Size) return _view;
+            if (_view != null && maxsize <= Size) return _view;
 
             // 扩大视图
-            size = maxsize - Offset;
+            size = maxsize + Offset;
             if (size < 1024)
                 size = 1024;
             else
@@ -72,13 +72,16 @@ namespace NewLife.NoDb.IO
                 if (n > 0) size += 1024 - n;
             }
 
-            Size = size;
+            Size = size - Offset;
 
             // 容量检查
             if (Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
 
             // 销毁旧的
             _view.TryDispose();
+
+            // 映射文件扩容
+            File.CheckCapacity(Offset + Size);
 
             return _view = File.Map.CreateViewAccessor(Offset, Size);
         }

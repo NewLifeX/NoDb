@@ -115,8 +115,7 @@ namespace NewLife.NoDb.IO
         /// <returns></returns>
         public MemoryView CreateView(Int64 offset = 0, Int64 size = 0)
         {
-            //Init();
-            CheckCapacity(offset + size);
+            //CheckCapacity(offset + size);
 
             return new MemoryView(this, offset, size);
         }
