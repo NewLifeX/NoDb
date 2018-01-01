@@ -71,14 +71,18 @@ namespace NewLife.NoDb.IO
             {
                 if (_view != null && maxsize <= Size && _Version == File.Version) return _view;
 
-                // 扩大视图
-                size = maxsize + Offset;
-                if (size < 1024)
-                    size = 1024;
+                // 最小增量 10%
+                size = maxsize - Size;
+                if (size < Size / 10) size = Size / 10;
+
+                // 扩大视图，4k 对齐
+                size += Size + Offset;
+                if (size < 4096)
+                    size = 4096;
                 else
                 {
-                    var n = size % 1024;
-                    if (n > 0) size += 1024 - n;
+                    var n = size % 4096;
+                    if (n > 0) size += 4096 - n;
                 }
 
                 Size = size - Offset;
