@@ -106,6 +106,7 @@ namespace test1
                     XTrace.Log.Info("write task start...");
                     var writeThreadCount = moduleSettings.WriteThreadCount;
                     // var threads = new Thread[writeThreadCount];
+                    var accessor = memoryFile.CreateViewAccessor(0, writeThreadCount * writeDataLen * 2, MemoryMappedFileAccess.ReadWrite);
                     var sw = new Stopwatch();
                     sw.Start();
 
@@ -115,7 +116,7 @@ namespace test1
                         {
                             var offset = i * writeDataLen * 2;
                             //Write(0, capity, arr, memoryFile);
-                            Write(offset, arr, memoryFile);
+                            Write(accessor, offset, arr, memoryFile);
                         }
                     }
 
@@ -136,7 +137,7 @@ namespace test1
                     {
                         Parallel.ForEach(writeOffsets, offset =>
                         {
-                            Write(offset, arr, memoryFile);
+                            Write(accessor, offset, arr, memoryFile);
                         });
                     }
 
@@ -163,59 +164,60 @@ namespace test1
 
                 //开启线程读取数据
                 var read = new Thread(() =>
-                  {
-                      if (!moduleSettings.IsRead) return;
-                      XTrace.Log.Info("read task start...");
-                      XTrace.Log.Info($"内存映射文件容量：{moduleSettings.FileCapity}G,当前循环次数：{moduleSettings.ReadThreadCount:n0},单次读取的数据大小：{moduleSettings.ReadDataSize:n0}B");
-                      var readThreadCount = moduleSettings.ReadThreadCount;
-                      //var tasks = new Task[readThreadCount];
-                      var sw = new Stopwatch();
-                      sw.Start();
-                      long count = 0;
-                      if (!moduleSettings.IsParallel)
-                      {
-                          for (var i = 0; i < readThreadCount; i++)
-                          {
-                              var offset = i * readDataLen * 2;
-                              //tasks[i]=Task.Factory.StartNew(() =>
-                              //{
-                              var results = Read(offset, readDataLen, memoryFile); //Read(0, capity, dataLen, memoryFile);
-                              if (results != readDataLen)
-                                  count++;
-                              //});
-                          }
-                      }
-                      //Task.WaitAll(tasks);
+                {
+                    if (!moduleSettings.IsRead) return;
+                    XTrace.Log.Info("read task start...");
+                    XTrace.Log.Info($"内存映射文件容量：{moduleSettings.FileCapity}G,当前循环次数：{moduleSettings.ReadThreadCount:n0},单次读取的数据大小：{moduleSettings.ReadDataSize:n0}B");
+                    var readThreadCount = moduleSettings.ReadThreadCount;
+                    //var tasks = new Task[readThreadCount];
+                    var accessor = memoryFile.CreateViewAccessor(0, readThreadCount * readDataLen * 2, MemoryMappedFileAccess.ReadWrite);
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    long count = 0;
+                    if (!moduleSettings.IsParallel)
+                    {
+                        for (var i = 0; i < readThreadCount; i++)
+                        {
+                            var offset = i * readDataLen * 2;
+                            //tasks[i]=Task.Factory.StartNew(() =>
+                            //{
+                            var results = Read(accessor, offset, readDataLen, memoryFile); //Read(0, capity, dataLen, memoryFile);
+                            if (results != readDataLen)
+                                count++;
+                            //});
+                        }
+                    }
+                    //Task.WaitAll(tasks);
 
-                      #region 并行计算
+                    #region 并行计算
 
-                      if (moduleSettings.IsParallel)
-                      {
-                          Parallel.ForEach(readOffsets, offset =>
-                          {
-                              var results = Read(offset, readDataLen, memoryFile);
-                              if (results != readDataLen)
-                                  count++;
-                          });
-                      }
+                    if (moduleSettings.IsParallel)
+                    {
+                        Parallel.ForEach(readOffsets, offset =>
+                        {
+                            var results = Read(accessor, offset, readDataLen, memoryFile);
+                            if (results != readDataLen)
+                                count++;
+                        });
+                    }
 
-                      #endregion
+                    #endregion
 
-                      sw.Stop();
+                    sw.Stop();
 
-                      XTrace.Log.Info("read task finished... ");
-                      var cost = sw.ElapsedMilliseconds;
-                      var readData = readThreadCount * moduleSettings.ReadDataSize / 1024 / 1024; //MB
-                      if ((cost / 1000) == 0)
-                          XTrace.Log.Error("读取耗时小于1S，建议调整参数，耗时调整到20S~60S之间！");
-                      float seconds = (cost / 1000) == 0 ? 1 : (cost / 1000); //s
-                      var speed = readData / seconds;
-                      var qps = readThreadCount / seconds;
-                      XTrace.Log.Info(
-                          $"读取{readData}MB的数据'a'性能参数如下: -QPS:{qps:n0}次/s，耗时:{cost:n0}ms，速度：{speed}MB/s,CPU耗时：{(Int32)p.TotalProcessorTime.TotalSeconds}s，" +
-                          $"内存占用：{(Int32)(p.WorkingSet64 / 1024 / 1024)}MB,打开句柄数：{p.HandleCount}");
-                      XTrace.Log.Error($"读取失败数据计数：{count}");
-                  });
+                    XTrace.Log.Info("read task finished... ");
+                    var cost = sw.ElapsedMilliseconds;
+                    var readData = readThreadCount * moduleSettings.ReadDataSize / 1024 / 1024; //MB
+                    if ((cost / 1000) == 0)
+                        XTrace.Log.Error("读取耗时小于1S，建议调整参数，耗时调整到20S~60S之间！");
+                    float seconds = (cost / 1000) == 0 ? 1 : (cost / 1000); //s
+                    var speed = readData / seconds;
+                    var qps = readThreadCount / seconds;
+                    XTrace.Log.Info(
+                        $"读取{readData}MB的数据'a'性能参数如下: -QPS:{qps:n0}次/s，耗时:{cost:n0}ms，速度：{speed}MB/s,CPU耗时：{(Int32)p.TotalProcessorTime.TotalSeconds}s，" +
+                        $"内存占用：{(Int32)(p.WorkingSet64 / 1024 / 1024)}MB,打开句柄数：{p.HandleCount}");
+                    XTrace.Log.Error($"读取失败数据计数：{count}");
+                });
                 read.Start();
                 #endregion
 
@@ -239,11 +241,11 @@ namespace test1
         /// <param name="offset"></param>
         /// <param name="data"></param>
         /// <param name="memoryFile"></param>
-        private static void Write(long offset, char[] data, MemoryMappedFile memoryFile)
+        private static void Write(UnmanagedMemoryAccessor accessor, long offset, char[] data, MemoryMappedFile memoryFile)
         {
             var size = data.Length * 2;//bytes字节
-            var accessor = memoryFile.CreateViewAccessor(offset, size, MemoryMappedFileAccess.ReadWrite);
-            accessor.WriteArray(0, data, 0, data.Length);
+            //var accessor = memoryFile.CreateViewAccessor(offset, size, MemoryMappedFileAccess.ReadWrite);
+            accessor.WriteArray(offset, data, 0, data.Length);
         }
 
         /// <summary>
@@ -253,14 +255,14 @@ namespace test1
         /// <param name="len"></param>
         /// <param name="memoryFile"></param>
         /// <returns></returns>
-        private static int Read(long offset, long len, MemoryMappedFile memoryFile)
+        private static int Read(UnmanagedMemoryAccessor accessor, long offset, long len, MemoryMappedFile memoryFile)
         {
             var size = len * 2;//bytes字节
-            var accessor = memoryFile.CreateViewAccessor(offset, size, MemoryMappedFileAccess.ReadWrite);
+            //var accessor = memoryFile.CreateViewAccessor(offset, size, MemoryMappedFileAccess.ReadWrite);
             //读取字符长度  
             var arr = new char[len];
             //读取字符  
-            return accessor.ReadArray<char>(0, arr, 0, Convert.ToInt32(len));
+            return accessor.ReadArray(offset, arr, 0, Convert.ToInt32(len));
             //Console.Clear();
             // Console.Write(arr);
             //return arr;
