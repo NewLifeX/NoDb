@@ -151,7 +151,11 @@ namespace NewLife.NoDb.Collections
             var v = _version;
             if (v > 0)
             {
-                OnSave();
+                lock (View.SyncRoot)
+                {
+                    OnSave();
+                }
+
                 Interlocked.Add(ref _version, -v);
             }
 

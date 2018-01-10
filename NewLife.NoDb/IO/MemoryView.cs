@@ -31,7 +31,8 @@ namespace NewLife.NoDb.IO
         /// <summary>版本</summary>
         private Int32 _Version;
 
-        private Object SyncRoot = new Object();
+        /// <summary>同步根对象</summary>
+        public Object SyncRoot = new Object();
         #endregion
 
         #region 构造
