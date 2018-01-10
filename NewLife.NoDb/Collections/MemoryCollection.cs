@@ -174,7 +174,7 @@ namespace NewLife.NoDb.Collections
         protected static Int32 _HeadSize = 0;
 
         /// <summary>元素大小</summary>
-        private static Int32 _ItemSize = Marshal.SizeOf(typeof(T));
+        protected static Int32 _ItemSize = Marshal.SizeOf(typeof(T));
 
         /// <summary>获取位置</summary>
         /// <param name="idx"></param>

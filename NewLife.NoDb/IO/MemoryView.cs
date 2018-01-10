@@ -144,9 +144,9 @@ namespace NewLife.NoDb.IO
         }
 
         /// <summary>读取结构体</summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="position"></param>
-        /// <param name="structure"></param>
+        /// <typeparam name="T">结构体类型</typeparam>
+        /// <param name="position">位置</param>
+        /// <param name="structure">结构体</param>
         public void Read<T>(Int64 position, out T structure) where T : struct
         {
             var view = GetView(position, SizeOf<T>());
@@ -154,12 +154,14 @@ namespace NewLife.NoDb.IO
         }
 
         /// <summary>写入结构体</summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="position"></param>
-        /// <param name="structure"></param>
-        public void Write<T>(Int64 position, ref T structure) where T : struct
+        /// <typeparam name="T">结构体类型</typeparam>
+        /// <param name="position">位置</param>
+        /// <param name="structure">结构体</param>
+        /// <param name="size">结构体大小</param>
+        public void Write<T>(Int64 position, ref T structure, Int32 size = 0) where T : struct
         {
-            var view = GetView(position, SizeOf<T>());
+            if (size <= 0) size = Marshal.SizeOf(structure);
+            var view = GetView(position, size);
             view.Write(position, ref structure);
         }
 

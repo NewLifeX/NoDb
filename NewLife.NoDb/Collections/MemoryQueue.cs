@@ -92,7 +92,7 @@ namespace NewLife.NoDb.Collections
             Interlocked.Increment(ref _Count);
 
             var p = WritePosition;
-            View.Write(GetP(p), ref item);
+            View.Write(GetP(p), ref item, _ItemSize);
 
             if (++p >= Capacity) p = 0;
             _WritePosition = p;

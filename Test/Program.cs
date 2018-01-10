@@ -142,7 +142,7 @@ namespace Test
         {
             //var count = Config.GetConfig("readcount", 10_000_000L);
             // var size = Config.GetConfig("size", 16);
-            var count = 20_000_000L;
+            var count = 80_000_000L;
             var sw = Stopwatch.StartNew();
             using (var mmf = new MemoryFile("queue.db"))
             {
