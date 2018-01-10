@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -11,6 +12,8 @@ using NewLife.NoDb.IO;
 using NewLife.NoDb.Storage;
 using NewLife.Reflection;
 using NewLife.Security;
+using NewLife.Configuration;
+using NewLife.Xml;
 
 namespace Test
 {
@@ -137,21 +140,24 @@ namespace Test
 
         static void Test4()
         {
-            var count = 10_000_000L;
+            var readcount=Config.GetConfig("readcount", 10_000_000L);
+           // var size = Config.GetConfig("size", 16);
+            //var count =10_000_000L;
             var sw = Stopwatch.StartNew();
             using (var mmf = new MemoryFile("queue.db"))
             {
                 var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false);
-                Console.WriteLine("队列总数：{0:n0}", qu.Count);
-                Console.WriteLine("准备插入：{0:n0}", count);
-                for (var i = 0L; i < count; i++)
+               // XTrace.Log.Info("文件大小：{0:n0}GB", size);
+                XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
+                XTrace.Log.Info("准备插入：{0:n0}", readcount);
+                for (var i = 0L; i < readcount; i++)
                 {
                     qu.Enqueue(new Block(i * 16, 998));
                 }
-                Console.WriteLine("队列总数：{0:n0}", qu.Count);
-                Console.WriteLine(qu.Peek());
+               XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
+               Console.WriteLine(qu.Peek());
             }
-            Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
+            XTrace.Log.Info("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, readcount * 1000L / sw.ElapsedMilliseconds);
         }
     }
 }

@@ -106,7 +106,7 @@ namespace NewLife.NoDb.IO
                     Capacity = fs.Length;
 
                     // 最大容量为0表示使用文件流最大值
-                    Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                    Map = MemoryMappedFile.CreateFromFile(fs, mapName,0,MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
                 }
 
                 //Interlocked.Increment(ref _Version);
