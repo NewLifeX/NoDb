@@ -10,11 +10,11 @@ namespace NewLife.NoDb.Collections
     {
         #region 属性
         /// <summary>长度</summary>
-        public Int64 Length { get; }
+        public Int32 Length { get; }
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int64 GetCount() => Length;
+        protected override Int32 GetCount() => Length;
         #endregion
 
         #region 构造

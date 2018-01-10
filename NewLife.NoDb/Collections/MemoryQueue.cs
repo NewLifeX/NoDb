@@ -12,21 +12,21 @@ namespace NewLife.NoDb.Collections
     public class MemoryQueue<T> : MemoryCollection<T>, IReadOnlyCollection<T> where T : struct
     {
         #region 属性
-        private Int64 _Count;
+        private Int32 _Count;
         /// <summary>当前元素个数</summary>
-        public Int64 Count => _Count;
+        public Int32 Count => _Count;
 
-        private Int64 _ReadPosition;
+        private Int32 _ReadPosition;
         /// <summary>读取指针</summary>
-        public Int64 ReadPosition => _ReadPosition;
+        public Int32 ReadPosition => _ReadPosition;
 
-        private Int64 _WritePosition;
+        private Int32 _WritePosition;
         /// <summary>写入指针</summary>
-        public Int64 WritePosition => _WritePosition;
+        public Int32 WritePosition => _WritePosition;
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected override Int64 GetCount() => Count;
+        protected override Int32 GetCount() => Count;
         #endregion
 
         #region 构造
@@ -122,15 +122,15 @@ namespace NewLife.NoDb.Collections
         protected override void OnSave()
         {
             View.Write(0, _Count);
-            View.Write(8, _ReadPosition);
-            View.Write(16, _WritePosition);
+            View.Write(4, _ReadPosition);
+            View.Write(8, _WritePosition);
         }
 
         private void OnLoad()
         {
-            _Count = View.ReadInt64(0);
-            _ReadPosition = View.ReadInt64(8);
-            _WritePosition = View.ReadInt64(16);
+            _Count = View.ReadInt32(0);
+            _ReadPosition = View.ReadInt32(4);
+            _WritePosition = View.ReadInt32(8);
         }
         #endregion
     }

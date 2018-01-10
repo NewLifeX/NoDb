@@ -16,7 +16,7 @@ namespace NewLife.NoDb.Collections
         public MemoryView View { get; }
 
         /// <summary>容量</summary>
-        public Int64 Capacity { get; }
+        public Int32 Capacity { get; }
         #endregion
 
         #region 构造
@@ -36,7 +36,7 @@ namespace NewLife.NoDb.Collections
 
             // 根据视图大小计算出可存储对象个数
             var n = size - _HeadSize;
-            Capacity = n / _ItemSize;
+            Capacity = (Int32)(n / _ItemSize);
         }
 
         /// <summary>销毁</summary>
@@ -183,7 +183,7 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
-        protected abstract Int64 GetCount();
+        protected abstract Int32 GetCount();
         #endregion
     }
 }
