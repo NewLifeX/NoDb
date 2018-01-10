@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Collections
 {
     /// <summary>内存循环队列</summary>
+    /// <remarks>
+    /// 单进程访问安全。
+    /// </remarks>
     public class MemoryQueue<T> : MemoryCollection<T>, IReadOnlyCollection<T> where T : struct
     {
         #region 属性
+        private Int64 _Count;
         /// <summary>当前元素个数</summary>
-        public Int64 Count { get => View.ReadInt64(0); private set => View.Write(0, value); }
+        public Int64 Count => _Count;
 
+        private Int64 _ReadPosition;
         /// <summary>读取指针</summary>
-        public Int64 ReadPosition { get => View.ReadInt64(8); private set => View.Write(8, value); }
+        public Int64 ReadPosition => _ReadPosition;
 
+        private Int64 _WritePosition;
         /// <summary>写入指针</summary>
-        public Int64 WritePosition { get => View.ReadInt64(16); private set => View.Write(16, value); }
+        public Int64 WritePosition => _WritePosition;
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>
@@ -32,7 +39,10 @@ namespace NewLife.NoDb.Collections
         /// <param name="init">是否初始化为空</param>
         public MemoryQueue(MemoryFile mf, Int64 offset = 0, Int64 size = 0, Boolean init = true) : base(mf, offset, size)
         {
-            if (init) ReadPosition = WritePosition = 0;
+            if (init)
+                OnSave();
+            else
+                OnLoad();
         }
         #endregion
 
@@ -59,13 +69,16 @@ namespace NewLife.NoDb.Collections
         {
             var n = Count;
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count));
-            Count = n - 1;
+            Interlocked.Decrement(ref _Count);
 
             var p = ReadPosition;
             View.Read<T>(GetP(p), out var val);
 
             if (++p >= Capacity) p = 0;
-            ReadPosition = p;
+            _ReadPosition = p;
+
+            // 定时保存
+            Commit();
 
             return val;
         }
@@ -76,13 +89,16 @@ namespace NewLife.NoDb.Collections
         {
             var n = Count;
             if (n + 1 >= Capacity) throw new InvalidOperationException("容量不足");
-            Count = n + 1;
+            Interlocked.Increment(ref _Count);
 
             var p = WritePosition;
             View.Write(GetP(p), ref item);
 
             if (++p >= Capacity) p = 0;
-            WritePosition = p;
+            _WritePosition = p;
+
+            // 定时保存
+            Commit();
         }
 
         /// <summary>枚举数</summary>
@@ -98,6 +114,23 @@ namespace NewLife.NoDb.Collections
 
                 if (++p >= Capacity) p = 0;
             }
+        }
+        #endregion
+
+        #region 定时保存
+        /// <summary>定时保存数据到文件</summary>
+        protected override void OnSave()
+        {
+            View.Write(0, _Count);
+            View.Write(8, _ReadPosition);
+            View.Write(16, _WritePosition);
+        }
+
+        private void OnLoad()
+        {
+            _Count = View.ReadInt64(0);
+            _ReadPosition = View.ReadInt64(8);
+            _WritePosition = View.ReadInt64(16);
         }
         #endregion
     }

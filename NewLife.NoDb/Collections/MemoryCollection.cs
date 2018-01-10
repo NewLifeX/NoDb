@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using System.Threading;
 using NewLife.NoDb.IO;
+using NewLife.Threading;
 
 namespace NewLife.NoDb.Collections
 {
@@ -19,7 +20,7 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 构造
-        /// <summary>实例化一个内存列表</summary>
+        /// <summary>实例化一个内存集合</summary>
         /// <param name="mf">内存文件</param>
         /// <param name="offset">内存偏移</param>
         /// <param name="size">内存大小。为0时自动增长</param>
@@ -44,6 +45,7 @@ namespace NewLife.NoDb.Collections
         {
             base.OnDispose(disposing);
 
+            _Timer.TryDispose();
             View.TryDispose();
         }
         #endregion
@@ -114,6 +116,57 @@ namespace NewLife.NoDb.Collections
         }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        #endregion
+
+        #region 定时保存
+        /// <summary>定时保存数据的周期</summary>
+        public Int32 Period { get; set; } = 1000;
+
+        /// <summary>修改完以后需要提交</summary>
+        public virtual void Commit()
+        {
+            Interlocked.Increment(ref _version);
+
+            StartTimer();
+        }
+
+        /// <summary>开启定时器</summary>
+        private void StartTimer()
+        {
+            if (_Timer != null) return;
+            lock (this)
+            {
+                if (_Timer != null) return;
+
+                var p = Period;
+                if (p < 100) p = 100;
+                _Timer = new TimerX(DoSave, null, p, p) { Async = true };
+            }
+        }
+
+        private TimerX _Timer;
+        private Int32 _version;
+        private void DoSave(Object state)
+        {
+            var v = _version;
+            if (v > 0)
+            {
+                OnSave();
+                Interlocked.Add(ref _version, -v);
+            }
+
+            var p = Period;
+            if (p < 100) p = 100;
+
+            if (p != _Timer.Period)
+            {
+                _Timer.Period = p;
+                _Timer.SetNext(p);
+            }
+        }
+
+        /// <summary>定时保存数据到文件</summary>
+        protected virtual void OnSave() { }
         #endregion
 
         #region 辅助

@@ -11,6 +11,9 @@ namespace NewLife.NoDb
     /// <summary>帮助类</summary>
     public static class Helper
     {
+        /// <summary></summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
         public static MemoryMappedFile CreateFromFile(String file)
         {
             file = file.GetFullPath();
@@ -28,16 +31,29 @@ namespace NewLife.NoDb
             return _mmf;
         }
 
+        /// <summary></summary>
+        /// <param name="mmf"></param>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public static Stream CreateStream(this MemoryMappedFile mmf, Block block)
         {
             return mmf.CreateViewStream(block.Position, block.Size);
         }
 
+        /// <summary></summary>
+        /// <param name="mmf"></param>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public static UnmanagedMemoryAccessor CreateAccessor(this MemoryMappedFile mmf, Block block)
         {
             return mmf.CreateViewAccessor(block.Position, block.Size);
         }
 
+        /// <summary></summary>
+        /// <param name="accessor"></param>
+        /// <param name="position"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public static Byte[] ReadArray(this UnmanagedMemoryAccessor accessor, Int32 position, Int32 count)
         {
             var buf = new Byte[count];
@@ -47,11 +63,17 @@ namespace NewLife.NoDb
             return buf;
         }
 
+        /// <summary></summary>
+        /// <param name="accessor"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
         public static Block ReadBlock(this UnmanagedMemoryAccessor accessor, Int32 position)
         {
             return Block.Null;
         }
 
+        /// <summary></summary>
+        /// <param name="mmf"></param>
         public static void CheckAccessControl(this MemoryMappedFile mmf)
         {
             var user = $"{Environment.MachineName}\\{Environment.UserName}";
