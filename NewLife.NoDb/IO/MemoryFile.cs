@@ -85,28 +85,29 @@ namespace NewLife.NoDb.IO
 
                 // 先销毁旧的
                 Map.TryDispose();
-                Stream.TryDispose();
+                //Stream.TryDispose();
 
                 var mapName = "MMF_" + Name;
 
                 // 带文件和不带文件
                 if (FileName.IsNullOrEmpty())
                 {
-                    Stream = null;
+                    //Stream = null;
                     Capacity = capacity;
                     Map = MemoryMappedFile.CreateOrOpen(mapName, capacity, MemoryMappedFileAccess.ReadWrite, MemoryMappedFileOptions.DelayAllocatePages, null, HandleInheritability.None);
                 }
                 else
                 {
                     // 使用文件流可以控制共享读写，让别的进程也可以读写文件
-                    var fs = new FileStream(FileName.GetFullPath(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
+                    var fs = Stream;
+                    if (fs == null) fs = new FileStream(FileName.GetFullPath(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
                     if (fs.Length < capacity) fs.SetLength(capacity);
 
                     Stream = fs;
                     Capacity = fs.Length;
 
                     // 最大容量为0表示使用文件流最大值
-                    Map = MemoryMappedFile.CreateFromFile(fs, mapName,0,MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                    Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
                 }
 
                 //Interlocked.Increment(ref _Version);
