@@ -46,6 +46,11 @@ namespace NewLife.NoDb.Collections
             base.OnDispose(disposing);
 
             _Timer.TryDispose();
+            _Timer = null;
+
+            // 关闭前处理未保存的数据
+            DoSave(null);
+
             View.TryDispose();
         }
         #endregion
@@ -162,10 +167,11 @@ namespace NewLife.NoDb.Collections
             var p = Period;
             if (p < 100) p = 100;
 
-            if (p != _Timer.Period)
+            var tmr = _Timer;
+            if (tmr != null && p != tmr.Period)
             {
-                _Timer.Period = p;
-                _Timer.SetNext(p);
+                tmr.Period = p;
+                tmr.SetNext(p);
             }
         }
 
