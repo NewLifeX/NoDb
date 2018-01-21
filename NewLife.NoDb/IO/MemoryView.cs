@@ -69,20 +69,27 @@ namespace NewLife.NoDb.IO
                 if (_view != null && maxsize <= Size && _Version == File.Version) return _view;
 
                 // 最小增量 10%
-                size = maxsize - Size;
-                if (size < Size / 10) size = Size / 10;
+                var step = maxsize - Size;
+                if (step < Size / 10) step = Size / 10;
 
                 // 扩大视图，4k 对齐
-                size += Size + Offset;
-                if (size < 4096)
-                    size = 4096;
+                if (Capacity >= 4096)
+                {
+                    step += Size + Offset;
+                    if (step < 4096)
+                        step = 4096;
+                    else
+                    {
+                        var n = step % 4096;
+                        if (n > 0) step += 4096 - n;
+                    }
+
+                    Size = step - Offset;
+                }
                 else
                 {
-                    var n = size % 4096;
-                    if (n > 0) size += 4096 - n;
+                    Size += step;
                 }
-
-                Size = size - Offset;
 
                 // 容量检查
                 if (Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));

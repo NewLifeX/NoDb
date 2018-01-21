@@ -27,12 +27,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test4();
+                Test2();
             else
             {
                 try
                 {
-                    Test4();
+                    Test2();
                 }
                 catch (Exception ex)
                 {
@@ -76,43 +76,44 @@ namespace Test
             // GC闭嘴
             //GC.TryStartNoGCRegion(10_000_000);
 
-            var bk = new Block(256, 20_000_000_000);
-            var hp = new Heap(bk);
-
-            var count = 10_000_000;
-            //var list = new List<Block>(count);
-            var list = new Block[count];
+            var count = 10_000_000L;
             var sw = Stopwatch.StartNew();
-            for (var i = 0; i < count; i++)
-            {
-                // 申请随机大小
-                list[i] = hp.Alloc(1600);
-                //list.Add(bk);
-            }
-            sw.Stop();
-            // 结果
-            foreach (var pi in hp.GetType().GetProperties())
-            {
-                Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
-            }
-            Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
+            var ms = 0L;
 
-            sw.Reset(); sw.Restart();
-            for (var i = 0; i < count; i++)
+            using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
+            using (var hp = new Heap(mmf, 256, 370L))
             {
-                hp.Free(list[i]);
-            }
-            sw.Stop();
-            // 结果
-            foreach (var pi in hp.GetType().GetProperties())
-            {
-                Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
-            }
-            Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
+                var list = new Block[count];
+                for (var i = 0; i < count; i++)
+                {
+                    // 申请随机大小
+                    list[i] = hp.Alloc(15);
+                    //list.Add(bk);
+                }
+                sw.Stop();
+                // 结果
+                foreach (var pi in hp.GetType().GetProperties())
+                {
+                    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
+                }
 
-            //var db = new Database("test.db");
-            //Console.WriteLine(db.Version);
+                ms = sw.ElapsedMilliseconds;
+                Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
 
+                sw.Reset(); sw.Restart();
+                for (var i = 0; i < count; i++)
+                {
+                    hp.Free(list[i]);
+                }
+                ms = sw.ElapsedMilliseconds;
+                // 结果
+                foreach (var pi in hp.GetType().GetProperties())
+                {
+                    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
+                }
+                Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
+            }
+            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);
         }
 
         static void Test3()
@@ -144,6 +145,7 @@ namespace Test
             // var size = Config.GetConfig("size", 16);
             var count = 80_000_000L;
             var sw = Stopwatch.StartNew();
+            var ms = 0L;
             using (var mmf = new MemoryFile("queue.db") { Log = XTrace.Log })
             using (var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false))
             {
@@ -157,9 +159,11 @@ namespace Test
                 }
                 XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
                 Console.WriteLine(qu.Peek());
-                XTrace.Log.Info("写入速度 {0:n0}ops", count * 1000L / sw.ElapsedMilliseconds);
+
+                ms = sw.ElapsedMilliseconds;
+                XTrace.Log.Info("写入速度 {0:n0}ops", count * 1000L / ms);
             }
-            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", sw.ElapsedMilliseconds, count * 1000L / sw.ElapsedMilliseconds);
+            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);
         }
     }
 }
