@@ -72,7 +72,7 @@ namespace NewLife.NoDb.IO
                 var step = maxsize - Size;
                 if (step < Size / 10) step = Size / 10;
 
-                // 扩大视图，4k 对齐
+                // 扩大视图，4k 对齐边界
                 if (Capacity >= 4096)
                 {
                     step += Size + Offset;
@@ -84,6 +84,7 @@ namespace NewLife.NoDb.IO
                         if (n > 0) step += 4096 - n;
                     }
 
+                    // 底层边界4k对齐，Size不一定对齐
                     Size = step - Offset;
                 }
                 else

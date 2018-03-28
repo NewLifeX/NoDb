@@ -46,27 +46,27 @@ namespace Test
 
         static void Test1()
         {
-            var cfg = CacheConfig.Current;
-            var set = cfg.GetOrAdd("nodb");
-            if (set.Provider.IsNullOrEmpty())
-            {
-                set.Provider = "NoDb";
-                set.Value = "no.db";
+            //var cfg = CacheConfig.Current;
+            //var set = cfg.GetOrAdd("nodb");
+            //if (set.Provider.IsNullOrEmpty())
+            //{
+            //    set.Provider = "NoDb";
+            //    set.Value = "no.db";
 
-                cfg.Save();
-            }
+            //    cfg.Save();
+            //}
 
-            var ch = Cache.Create(set);
+            //var ch = Cache.Create(set);
 
-            var str = ch.Get<String>("name");
-            Console.WriteLine(str);
+            //var str = ch.Get<String>("name");
+            //Console.WriteLine(str);
 
-            ch.Set("name", "大石头 {0}".F(DateTime.Now));
+            //ch.Set("name", "大石头 {0}".F(DateTime.Now));
 
-            str = ch.Get<String>("name");
-            Console.WriteLine(str);
+            //str = ch.Get<String>("name");
+            //Console.WriteLine(str);
 
-            ch.Bench();
+            //ch.Bench();
         }
 
         static void Test2()
@@ -81,7 +81,7 @@ namespace Test
             var ms = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
-            using (var hp = new Heap(mmf, 256, 370L))
+            using (var hp = new Heap(mmf, 256, -1))
             {
                 var list = new Block[count];
                 for (var i = 0; i < count; i++)

@@ -67,7 +67,7 @@ namespace NewLife.NoDb.IO
             CheckCapacity(1024);
         }
 
-        /// <summary>检查容量并扩容</summary>
+        /// <summary>检查容量并扩容。扩容时其它线程使用映射内存有风险</summary>
         /// <param name="capacity">期望达到的目标容量</param>
         /// <returns></returns>
         public Boolean CheckCapacity(Int64 capacity)
@@ -89,7 +89,7 @@ namespace NewLife.NoDb.IO
 
                 var mapName = "MMF_" + Name;
 
-                // 带文件和不带文件
+                // 不带文件的纯内存映射
                 if (FileName.IsNullOrEmpty())
                 {
                     //Stream = null;
