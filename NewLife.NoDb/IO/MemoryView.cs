@@ -12,14 +12,14 @@ namespace NewLife.NoDb.IO
         /// <summary>内存文件</summary>
         public MemoryFile File { get; }
 
-        /// <summary>偏移</summary>
-        public Int64 Offset { get; private set; }
+        /// <summary>偏移。初始化后不再改变</summary>
+        public Int64 Offset { get; }
 
-        /// <summary>当前大小</summary>
+        /// <summary>当前大小。根据需要自动扩容</summary>
         public Int64 Size { get; private set; }
 
-        /// <summary>最大容量</summary>
-        public Int64 Capacity { get; private set; }
+        /// <summary>最大容量。初始化后不再改变</summary>
+        public Int64 Capacity { get; }
 
         /// <summary>视图</summary>
         private MemoryMappedViewAccessor _view;

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace NewLife.NoDb.Storage
 {
-    /// <summary>数据块</summary>
+    /// <summary>数据块。结构体，避免海量分配造成GC压力</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct Block : IEquatable<Block>, IComparable<Block>
     {

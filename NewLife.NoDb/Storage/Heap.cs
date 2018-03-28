@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using NewLife.NoDb.IO;
@@ -27,12 +26,6 @@ namespace NewLife.NoDb.Storage
         /// <summary>已分配块数</summary>
         public Int64 Count => _Count;
 
-        ///// <summary>速度优先。默认true</summary>
-        //public Boolean SpeedFirst { get; set; } = true;
-
-        ///// <summary>当前可用的空闲片</summary>
-        //private Int32 activeIndex = -1;
-
         /// <summary>空闲块</summary>
         private MemoryBlock _Free;
 
@@ -47,12 +40,9 @@ namespace NewLife.NoDb.Storage
         public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = -1)
         {
             if (mf == null) throw new ArgumentNullException(nameof(mf));
+            // 内存映射未初始化时 mf.Capacity=0
             if (offset < 0 || offset >= mf.Capacity && mf.Capacity > 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (size < 0) size = mf.Capacity - offset;
-
-            //free = freeList ?? new List<Block>();
-
-            //free.Add(bk);
 
             Position = offset;
             Size = size;
@@ -88,7 +78,7 @@ namespace NewLife.NoDb.Storage
             if (mb.Size == 0)
             {
                 mb.Position = 8;
-                mb.Size = Size - 8 - 8;
+                mb.Size = Size - 8;
                 mb.Free = true;
                 mb.Write(vw);
 
@@ -113,29 +103,19 @@ namespace NewLife.NoDb.Storage
         {
             // 8字节对齐
             var len = size;
-            if ((len & 0x07) > 0) len = (len & 0xF8) + 8;
+            if ((len & 0b0000_0111) > 0) len = (len & 0b1111_1000) + 8;
 
             // 同步长度
             len += 8;
 
+            // 查找合适空闲块
             var mb = _Free;
-            while (mb != null && mb.Size < len)
-            {
-                if (mb.Next == 0) break;
 
-                mb = mb.ReadNext(View);
-            }
-            if (mb == null || len > mb.Size) throw new Exception("空间不足");
+            // 暂时加锁分配，将来采用多路空闲链来解决并行分配问题
             lock (SyncRoot)
             {
-                mb = _Free;
-                while (mb != null && mb.Size < len)
-                {
-                    if (mb.Next == 0) break;
-
-                    mb = mb.ReadNext(View);
-                }
-                if (mb == null || len > mb.Size) throw new Exception("空间不足");
+                while (mb.Size < len && mb.MoveNext(View)) ;
+                if (mb.Size < len) throw new Exception("空间不足");
 
                 // 结果
                 Block bk;

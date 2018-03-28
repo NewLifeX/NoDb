@@ -18,10 +18,10 @@ namespace NewLife.NoDb.IO
         /// <summary>文件流</summary>
         public FileStream Stream { get; private set; }
 
-        /// <summary>映射</summary>
+        /// <summary>映射。每次扩容时重新实例化</summary>
         public MemoryMappedFile Map { get; private set; }
 
-        /// <summary>容量</summary>
+        /// <summary>容量。默认0，首次使用初始化</summary>
         public Int64 Capacity { get; private set; }
 
         private volatile Int32 _Version;
