@@ -84,6 +84,10 @@ namespace NewLife.NoDb.Storage
             }
         }
 
+        /// <summary>获取数据区域</summary>
+        /// <returns></returns>
+        public Block GetData() { return new Block(Position + 8, Size - 8); }
+
         /// <summary>读取下一块</summary>
         /// <param name="view"></param>
         /// <returns></returns>

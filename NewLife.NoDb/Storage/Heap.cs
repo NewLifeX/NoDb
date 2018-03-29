@@ -151,8 +151,10 @@ namespace NewLife.NoDb.Storage
             lock (SyncRoot)
             {
                 // 退8字节就是内存块
-                var mb = new MemoryBlock();
-                mb.Position = bk.Position - 8;
+                var mb = new MemoryBlock
+                {
+                    Position = bk.Position - 8
+                };
                 mb.Read(vw);
 
                 if (mb.Free) throw new ArgumentException("空间已经释放");
@@ -162,8 +164,10 @@ namespace NewLife.NoDb.Storage
                 mb.Next = 0;
 
                 // 试图合并右边块
-                var mb2 = new MemoryBlock();
-                mb2.Position = mb.Position + mb.Size;
+                var mb2 = new MemoryBlock
+                {
+                    Position = mb.Position + mb.Size
+                };
                 mb2.Read(vw);
                 if (mb2.Free)
                 {
@@ -193,6 +197,38 @@ namespace NewLife.NoDb.Storage
 
                 Interlocked.Decrement(ref _Count);
                 Interlocked.Add(ref _Used, -len);
+            }
+        }
+
+        /// <summary>重分配，扩容</summary>
+        /// <param name="ptr"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public Block Realloc(Int64 ptr, Int64 size)
+        {
+            var vw = View;
+            lock (SyncRoot)
+            {
+                // 退8字节就是内存块
+                var mb = new MemoryBlock { Position = ptr - 8 };
+                mb.Read(vw);
+
+                if (mb.Free) throw new ArgumentException("空间已经释放");
+
+                var bk = mb.GetData();
+                if (bk.Size >= size) return bk;
+
+                // 申请新的内存块
+                var bk2 = Alloc(Size);
+
+                // 拷贝数据
+                var buf = vw.ReadBytes(bk.Position, (Int32)bk.Size);
+                vw.WriteBytes(bk2.Position, buf);
+
+                // 释放旧的
+                Free(bk);
+
+                return bk2;
             }
         }
         #endregion
