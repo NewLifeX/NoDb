@@ -9,8 +9,8 @@ namespace NewLife.NoDb.Storage
      * 2，空闲块：8字节长度（含3位标识）+ 8下一空闲指针 + 填充数据 + 8字节长度（含3位标识）
      * 
      * 其中3位标识符：
-     * 1，已用块，0位标识上一块是否空闲块
-     * 2，空闲块，0位标识本块是否空闲块
+     * 1，0位标识本块是否空闲块
+     * 2，1位标识上一块是否空闲块
      * 
      * 结构要求：
      * 1，申请时，能够顺序找到各空闲块
@@ -36,6 +36,9 @@ namespace NewLife.NoDb.Storage
         /// <summary>空闲</summary>
         public Boolean Free { get; set; }
 
+        /// <summary>前一块空闲</summary>
+        public Boolean PrevFree { get; set; }
+
         /// <summary>下一空闲块</summary>
         public Int64 Next { get; set; }
         #endregion
@@ -58,6 +61,7 @@ namespace NewLife.NoDb.Storage
 
             Size = len;
             Free = (len & 0b0000_00001) > 0;
+            PrevFree = (len & 0b0000_00010) > 0;
 
             // 如果是空闲块，还要读取下一空闲指针
             if (Free) Next = view.ReadInt64(p + 8);
@@ -74,13 +78,16 @@ namespace NewLife.NoDb.Storage
             var len = Size;
             if ((len & 0b0000_0111) > 0) len = (len & 0b1111_1000) + 8;
 
-            var flag = Free ? 1L : 0L;
-            view.Write(p, len | flag);
-            // 使用块与空闲块结构不同
+            var len2 = len;
+            if (Free) len2 |= 0b0000_00001;
+            if (PrevFree) len2 |= 0b0000_00010;
+
+            view.Write(p, len2);
+            // 空闲块有下一块指针，尾部也有长度标记
             if (Free)
             {
                 view.Write(p + 8, Next);
-                view.Write(p + len, len | 0x01);
+                view.Write(p + len - 8, len2);
             }
         }
 

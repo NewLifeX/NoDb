@@ -59,7 +59,9 @@ namespace NewLife.NoDb.Storage
 
             View.TryDispose();
         }
+        #endregion
 
+        #region 基础方法
         void Init(Block bk)
         {
             var vw = View;
@@ -82,10 +84,35 @@ namespace NewLife.NoDb.Storage
                 mb.Free = true;
                 mb.Write(vw);
 
-                vw.Write(0, mb.Position);
+                WriteRoot(mb.Position);
             }
 
             _Free = mb;
+        }
+
+        void WriteRoot(Int64 ptr)
+        {
+            View.Write(0, ptr);
+        }
+
+        /// <summary>设置前一块的Next指针，主要考虑头部_Free</summary>
+        /// <param name="prev"></param>
+        /// <param name="next"></param>
+        void SetNextOfPrev(MemoryBlock prev, Int64 next)
+        {
+            var vw = View;
+            // prev为空说明内存分配位于第一空闲块，需要移动_Free
+            if (prev == null)
+            {
+                _Free = new MemoryBlock { Position = next };
+                _Free.Read(vw);
+                WriteRoot(next);
+            }
+            else
+            {
+                prev.Next = next;
+                prev.Write(vw);
+            }
         }
         #endregion
 
@@ -108,38 +135,52 @@ namespace NewLife.NoDb.Storage
             // 同步长度
             len += 8;
 
-            // 查找合适空闲块
-            var mb = _Free;
+            var vw = View;
 
             // 暂时加锁分配，将来采用多路空闲链来解决并行分配问题
             lock (SyncRoot)
             {
-                while (mb.Size < len && mb.MoveNext(View)) ;
+                // 查找合适空闲块
+                var mb = _Free;
+                MemoryBlock prev = null;
+                while (mb.Size < len)
+                {
+                    prev = mb;
+                    if (!mb.MoveNext(vw)) break;
+                }
                 if (mb.Size < len) throw new Exception("空间不足");
 
                 // 结果
-                Block bk;
-                bk.Position = mb.Position + 8;
-                bk.Size = len - 8;
-
-                // 写入使用块长度
-                View.Write(mb.Position, bk.Size);
+                var rs = new MemoryBlock { Position = mb.Position, Size = len };
 
                 // 空闲块偏移
                 mb.Position += len;
                 mb.Size -= len;
-                mb.Write(View);
-
-                // 空闲块开始地址改变
-                if (mb == _Free)
+                // 不足一个空闲块时，加大结果块
+                if (mb.Size < 24)
                 {
-                    View.Write(0, mb.Position);
+                    rs.Size += mb.Size;
+                    mb.Position += mb.Size;
+                    mb.Size = 0;
+
+                    // 前一块Next指向下一块
+                    SetNextOfPrev(prev, mb.Next);
+                }
+                else
+                {
+                    mb.Write(vw);
+
+                    // 前一块Next指向新切割出来的空闲块
+                    SetNextOfPrev(prev, mb.Position);
                 }
 
-                Interlocked.Increment(ref _Count);
-                Interlocked.Add(ref _Used, len);
+                // 保存结果块
+                rs.Write(vw);
 
-                return bk;
+                Interlocked.Increment(ref _Count);
+                Interlocked.Add(ref _Used, rs.Size);
+
+                return rs.GetData();
             }
         }
 

@@ -81,7 +81,7 @@ namespace Test
             var ms = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
-            using (var hp = new Heap(mmf, 256, -1))
+            using (var hp = new Heap(mmf, 256, 373))
             {
                 var list = new Block[count];
                 for (var i = 0; i < count; i++)
