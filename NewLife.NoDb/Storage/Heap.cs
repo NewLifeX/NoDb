@@ -204,10 +204,19 @@ namespace NewLife.NoDb.Storage
                 }
                 else
                 {
-                    mb.Write(vw);
-
                     // 前一块Next指向新切割出来的空闲块
-                    SetNextOfPrev(prev, mb);
+                    //SetNextOfPrev(prev, mb);
+                    if (prev != null)
+                    {
+                        prev.Next = mb.Position;
+                        mb.Prev = prev.Position;
+                        prev.Write(vw);
+                    }
+                    var next = mb.ReadNext(vw);
+                    next.Prev = mb.Position;
+                    next.Write(vw);
+
+                    mb.Write(vw);
                 }
 
                 // 保存结果块

@@ -33,13 +33,16 @@ namespace NewLife.NoDb.Storage
         /// <summary>大小。包含头尾</summary>
         public Int64 Size { get; set; }
 
-        /// <summary>空闲</summary>
+        /// <summary>当前空闲</summary>
         public Boolean Free { get; set; }
 
         /// <summary>前一块空闲</summary>
         public Boolean PrevFree { get; set; }
 
-        /// <summary>下一空闲块</summary>
+        /// <summary>前一个空闲块</summary>
+        public Int64 Prev { get; set; }
+
+        /// <summary>下一个空闲块</summary>
         public Int64 Next { get; set; }
         #endregion
 
@@ -66,8 +69,12 @@ namespace NewLife.NoDb.Storage
             Free = (flag & 0b0000_00001) > 0;
             PrevFree = (flag & 0b0000_00010) > 0;
 
-            // 如果是空闲块，还要读取下一空闲指针
-            if (Free) Next = view.ReadInt64(p + 8);
+            // 如果是空闲块，还要读取前后空闲指针，最后8字节则可以不用读取
+            if (Free)
+            {
+                Prev = view.ReadInt64(p + 8);
+                Next = view.ReadInt64(p + 16);
+            }
         }
 
         /// <summary>写入内存块</summary>
@@ -88,7 +95,8 @@ namespace NewLife.NoDb.Storage
             // 空闲块有下一块指针，尾部也有长度标记
             if (Free)
             {
-                view.Write(p + 8, Next);
+                view.Write(p + 8, Prev);
+                view.Write(p + 16, Next);
                 view.Write(p + len - 8, len2);
             }
         }
@@ -96,6 +104,17 @@ namespace NewLife.NoDb.Storage
         /// <summary>获取数据区域</summary>
         /// <returns></returns>
         public Block GetData() { return new Block(Position + 8, Size - 8); }
+
+        /// <summary>读取前一块</summary>
+        /// <param name="view"></param>
+        /// <returns></returns>
+        public MemoryBlock ReadPrev(MemoryView view)
+        {
+            var mb = new MemoryBlock { Position = Prev };
+            if (Prev != 0) mb.Read(view);
+
+            return mb;
+        }
 
         /// <summary>读取下一块</summary>
         /// <param name="view"></param>
