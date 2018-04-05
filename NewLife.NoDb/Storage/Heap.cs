@@ -76,6 +76,7 @@ namespace NewLife.NoDb.Storage
 
         #region 基础方法
         const Int32 HeaderSize = 64;
+        const Int32 FreeBlockSize = 8 + 8 + 8 + 8;
 
         /// <summary>初始化堆。初始化之后才能使用</summary>
         public void Init()
@@ -131,9 +132,7 @@ namespace NewLife.NoDb.Storage
                 prev.Write(vw);
             }
         }
-        #endregion
 
-        #region 序列化
         /// <summary>写入参数</summary>
         private void Save()
         {
@@ -194,7 +193,7 @@ namespace NewLife.NoDb.Storage
                 mb.Position += len;
                 mb.Size -= len;
                 // 不足一个空闲块时，加大结果块
-                if (mb.Size < 24)
+                if (mb.Size < FreeBlockSize)
                 {
                     rs.Size += mb.Size;
                     mb.Position += mb.Size;
@@ -238,37 +237,48 @@ namespace NewLife.NoDb.Storage
                 if (mb.Free) throw new ArgumentException("空间已经释放");
 
                 var len = mb.Size + 8;
-                mb.Free = false;
+                mb.Free = true;
                 mb.Next = 0;
 
                 // 试图合并右边块
-                var mb2 = new MemoryBlock
+                var right = new MemoryBlock
                 {
                     Position = mb.Position + mb.Size
                 };
-                mb2.Read(vw);
-                if (mb2.Free)
+                right.Read(vw);
+                if (right.Free)
                 {
-                    mb.Size += 8 + mb2.Size;
-                    mb.Next = mb2.Next;
+                    mb.Size += right.Size;
+                    mb.Next = right.Next;
+
+                    // 头部
+                    if (_Free.Position == right.Position) _Free = mb;
                 }
 
                 // 试图合并左边块
-                var p = vw.ReadInt64(mb.Position - 8);
-                p &= 0xF8;
-                mb2.Position = mb.Position - p - 8;
-                mb2.Read(vw);
-                if (mb2.Free)
+                if (mb.PrevFree)
                 {
-                    if (mb.Next > 0)
-                    {
-                        if (mb2.Next != mb.Position + mb.Size) throw new InvalidDataException("数据指针错误");
-                    }
-                    else
-                        mb.Next = mb2.Next;
+                    // 上一个空闲块的大小
+                    var size = vw.ReadInt64(mb.Position - 8);
+                    size -= size % 8;
 
-                    mb.Position = mb2.Position;
-                    mb.Size += 8 + mb2.Size;
+                    var left = new MemoryBlock
+                    {
+                        Position = mb.Position - size
+                    };
+                    left.Read(vw);
+                    if (left.Free)
+                    {
+                        if (mb.Next > 0)
+                        {
+                            if (left.Next != mb.Position + mb.Size) throw new InvalidDataException("数据指针错误");
+                        }
+                        else
+                            mb.Next = left.Next;
+
+                        mb.Position = left.Position;
+                        mb.Size += 8 + left.Size;
+                    }
                 }
 
                 mb.Write(vw);

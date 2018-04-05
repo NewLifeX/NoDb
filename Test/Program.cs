@@ -108,6 +108,9 @@ namespace Test
                 Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
 
                 sw.Reset(); sw.Restart();
+                hp.Free(list[4]);
+                hp.Free(list[3]);
+                hp.Free(list[5]);
                 for (var i = 0; i < count; i++)
                 {
                     hp.Free(list[i]);
