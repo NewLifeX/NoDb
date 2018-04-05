@@ -57,6 +57,10 @@ namespace NewLife.NoDb.IO
             Stream.TryDispose();
             Stream = null;
         }
+
+        /// <summary>映射文件名字</summary>
+        /// <returns></returns>
+        public override String ToString() => Name;
         #endregion
 
         #region 核心方法

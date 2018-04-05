@@ -52,6 +52,10 @@ namespace NewLife.NoDb.IO
             _view.TryDispose();
             _view = null;
         }
+
+        /// <summary>内存视图</summary>
+        /// <returns></returns>
+        public override String ToString() => $"{File}({Offset:n0}, {Size:n0}/{Capacity:n0})";
         #endregion
 
         #region 视图扩容
@@ -68,6 +72,10 @@ namespace NewLife.NoDb.IO
             {
                 if (_view != null && maxsize <= Size && _Version == File.Version) return _view;
 
+                // 容量检查
+                var remain = Capacity - Size;
+                if (Capacity > 0 && remain < 0) throw new ArgumentOutOfRangeException(nameof(Size));
+
                 // 最小增量 10%
                 var step = maxsize - Size;
                 if (step < Size / 10) step = Size / 10;
@@ -75,25 +83,26 @@ namespace NewLife.NoDb.IO
                 // 扩大视图，4k 对齐边界
                 if (Capacity >= 4096)
                 {
-                    step += Size + Offset;
-                    if (step < 4096)
-                        step = 4096;
+                    maxsize += offset;
+                    if (maxsize < 4096)
+                        maxsize = 4096;
                     else
                     {
-                        var n = step % 4096;
-                        if (n > 0) step += 4096 - n;
+                        var n = maxsize % 4096;
+                        if (n > 0) maxsize += 4096 - n;
                     }
 
                     // 底层边界4k对齐，Size不一定对齐
-                    Size = step - Offset;
-                }
-                else
-                {
-                    Size += step;
+                    step = maxsize - Offset - Size;
                 }
 
+                // 注意末端边界
+                if (step > remain) step = remain;
+
+                Size += step;
+
                 // 容量检查
-                if (Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
+                if (Size < offset + size || Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
 
                 // 销毁旧的
                 _view.TryDispose();

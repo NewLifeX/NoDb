@@ -10769,7 +10769,7 @@
             <returns></returns>
         </member>
         <member name="T:NewLife.Web.OAuth.TaobaoClient">
-            <summary>身份验证提供者</summary>
+            <summary>淘宝身份验证提供者</summary>
         </member>
         <member name="M:NewLife.Web.OAuth.TaobaoClient.#ctor">
             <summary>实例化</summary>
@@ -11247,6 +11247,16 @@
         <member name="M:NewLife.Web.OAuthClient.Fill(NewLife.Model.IManageUser)">
             <summary>填充用户，登录成功并获取用户信息之后</summary>
             <param name="user"></param>
+        </member>
+        <member name="P:NewLife.Web.OAuthClient.LogoutUrl">
+            <summary>注销地址</summary>
+        </member>
+        <member name="M:NewLife.Web.OAuthClient.Logout(System.String,System.String,System.Uri)">
+            <summary>注销</summary>
+            <param name="redirect">完成后调整的目标地址</param>
+            <param name="state">用户状态数据</param>
+            <param name="baseUri">相对地址的基地址</param>
+            <returns></returns>
         </member>
         <member name="M:NewLife.Web.OAuthClient.GetUrl(System.String)">
             <summary>替换地址模版参数</summary>
