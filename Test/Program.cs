@@ -81,21 +81,28 @@ namespace Test
             var ms = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
-            using (var hp = new Heap(mmf, 256, 373))
+            using (var hp = new Heap(mmf, 256, 373, false))
             {
+                hp.Log = XTrace.Log;
+                hp.Init();
+
+                count = 12;
                 var list = new Block[count];
                 for (var i = 0; i < count; i++)
                 {
                     // 申请随机大小
                     list[i] = hp.Alloc(15);
                     //list.Add(bk);
+
+                    Console.WriteLine("申请到 {0} Count={1} Used={2}", list[i], hp.Count, hp.Used);
                 }
                 sw.Stop();
                 // 结果
-                foreach (var pi in hp.GetType().GetProperties())
-                {
-                    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
-                }
+                //foreach (var pi in hp.GetType().GetProperties())
+                //{
+                //    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
+                //}
+                Console.WriteLine("{0} Count={1} Used={2}", hp, hp.Count, hp.Used);
 
                 ms = sw.ElapsedMilliseconds;
                 Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
@@ -104,13 +111,18 @@ namespace Test
                 for (var i = 0; i < count; i++)
                 {
                     hp.Free(list[i]);
+
+                    Console.WriteLine("释放 {0} Count={1} Used={2}", list[i], hp.Count, hp.Used);
                 }
-                ms = sw.ElapsedMilliseconds;
+                sw.Stop();
+
                 // 结果
-                foreach (var pi in hp.GetType().GetProperties())
-                {
-                    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
-                }
+                Console.WriteLine("{0} Count={1} Used={2}", hp, hp.Count, hp.Used);
+                //foreach (var pi in hp.GetType().GetProperties())
+                //{
+                //    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
+                //}
+                ms = sw.ElapsedMilliseconds;
                 Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
             }
             XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);

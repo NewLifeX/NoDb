@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using NewLife.Log;
 using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Storage
@@ -37,7 +38,8 @@ namespace NewLife.NoDb.Storage
         /// <param name="mf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = -1)
+        /// <param name="init">自动初始化加载堆</param>
+        public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = -1, Boolean init = true)
         {
             if (mf == null) throw new ArgumentNullException(nameof(mf));
             // 内存映射未初始化时 mf.Capacity=0
@@ -48,7 +50,7 @@ namespace NewLife.NoDb.Storage
             Size = size;
             View = mf.CreateView(offset, size);
 
-            Init(new Block(offset, size));
+            if (init) Init();
         }
 
         /// <summary>销毁</summary>
@@ -59,67 +61,106 @@ namespace NewLife.NoDb.Storage
 
             View.TryDispose();
         }
+
+        /// <summary>堆管理</summary>
+        /// <returns></returns>
+        public override String ToString()
+        {
+            var vw = View;
+            var mb = _Free;
+            if (mb == null) return vw + "";
+
+            return $"[{vw.File}]({vw.Offset}, {vw.Capacity}) Free=[{mb.Position:n0}, {mb.Size:n0}]";
+        }
         #endregion
 
         #region 基础方法
-        void Init(Block bk)
-        {
-            var vw = View;
-            var mb = new MemoryBlock();
+        const Int32 HeaderSize = 64;
 
-            // 空闲块指针
-            var fp = vw.ReadInt64(0);
-            if (fp >= 0 && fp < vw.Capacity)
-            {
-                // 读取第一个空闲块
-                mb.Position = fp;
-                mb.Read(vw);
-            }
+        /// <summary>初始化堆。初始化之后才能使用</summary>
+        public void Init()
+        {
+            // 读取配置
+            Load();
+            WriteLog("加载堆 {0}", this);
 
             // 初始化空闲链表
-            if (mb.Size == 0)
-            {
-                mb.Position = 8;
-                mb.Size = Size - 8;
-                mb.Free = true;
-                mb.Write(vw);
-
-                WriteRoot(mb.Position);
-            }
-
-            _Free = mb;
+            var mb = _Free;
+            if (mb.Position < HeaderSize || !mb.Free) Clear();
         }
 
-        void WriteRoot(Int64 ptr)
+        /// <summary>重新初始化内存堆为空</summary>
+        public void Clear()
         {
-            View.Write(0, ptr);
+            var vw = View;
+            var mb = new MemoryBlock
+            {
+                Position = HeaderSize,
+                Size = Align(Size - HeaderSize, false),
+
+                Free = true,
+                PrevFree = false
+            };
+
+            _Count = 0;
+            _Used = 0;
+            _Free = mb;
+
+            WriteLog("初始化堆 {0}", this);
+
+            mb.Write(vw);
+            Save();
         }
 
         /// <summary>设置前一块的Next指针，主要考虑头部_Free</summary>
         /// <param name="prev"></param>
         /// <param name="next"></param>
-        void SetNextOfPrev(MemoryBlock prev, Int64 next)
+        void SetNextOfPrev(MemoryBlock prev, MemoryBlock next)
         {
             var vw = View;
             // prev为空说明内存分配位于第一空闲块，需要移动_Free
             if (prev == null)
             {
-                _Free = new MemoryBlock { Position = next };
-                _Free.Read(vw);
-                WriteRoot(next);
+                var fp = _Free.Position;
+                _Free = next;
+                if (next.Position != fp) Save();
             }
             else
             {
-                prev.Next = next;
+                prev.Next = next.Position;
                 prev.Write(vw);
             }
         }
         #endregion
 
         #region 序列化
-        private void Serialize(BinaryWriter writer) { }
+        /// <summary>写入参数</summary>
+        private void Save()
+        {
+            var vw = View;
+            var mb = _Free;
 
-        private void Deserialize(BinaryReader reader) { }
+            vw.Write(0, _Count);
+            vw.Write(8, _Used);
+            if (mb != null) vw.Write(16, mb.Position);
+        }
+
+        /// <summary>读取参数</summary>
+        private void Load()
+        {
+            var vw = View;
+            var mb = _Free ?? new MemoryBlock();
+
+            _Count = vw.ReadInt64(0);
+            _Used = vw.ReadInt64(8);
+            var fp = mb.Position = vw.ReadInt64(16);
+
+            // 首次读取空闲块
+            //if (_Free == null && fp >= HeaderSize && fp < vw.Capacity) mb.Read(vw);
+            if (fp >= HeaderSize && fp < vw.Capacity) mb.Read(vw);
+
+            _Free = mb;
+        }
         #endregion
 
         #region 核心分配算法
@@ -128,12 +169,8 @@ namespace NewLife.NoDb.Storage
         /// <returns></returns>
         public Block Alloc(Int64 size)
         {
-            // 8字节对齐
-            var len = size;
-            if ((len & 0b0000_0111) > 0) len = (len & 0b1111_1000) + 8;
-
-            // 同步长度
-            len += 8;
+            // 增加长度，8字节对齐
+            var len = Align(8 + size);
 
             var vw = View;
 
@@ -164,14 +201,14 @@ namespace NewLife.NoDb.Storage
                     mb.Size = 0;
 
                     // 前一块Next指向下一块
-                    SetNextOfPrev(prev, mb.Next);
+                    SetNextOfPrev(prev, mb.ReadNext(vw));
                 }
                 else
                 {
                     mb.Write(vw);
 
                     // 前一块Next指向新切割出来的空闲块
-                    SetNextOfPrev(prev, mb.Position);
+                    SetNextOfPrev(prev, mb);
                 }
 
                 // 保存结果块
@@ -271,6 +308,36 @@ namespace NewLife.NoDb.Storage
 
                 return bk2;
             }
+        }
+        #endregion
+
+        #region 辅助
+        /// <summary>8字节对齐</summary>
+        /// <param name="len">要对齐的长度</param>
+        /// <param name="up">向上对齐。默认true</param>
+        /// <returns></returns>
+        private static Int64 Align(Int64 len, Boolean up = true)
+        {
+            // 8字节对齐
+            var flag = len & 0b0000_0111;
+            if (flag > 0)
+            {
+                len -= flag;
+                if (up) len += 8;
+            }
+
+            return len;
+        }
+
+        /// <summary>日志</summary>
+        public ILog Log { get; set; }
+
+        /// <summary>写日志</summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
+        public void WriteLog(String format, params Object[] args)
+        {
+            Log?.Info(format, args);
         }
         #endregion
     }

@@ -44,6 +44,9 @@ namespace NewLife.NoDb.Storage
         #endregion
 
         #region 构造
+        /// <summary>内存块</summary>
+        /// <returns></returns>
+        public override String ToString() => $"({Position:n0}, {Size:n0})[{Free}, {PrevFree}]";
         #endregion
 
         #region 方法
@@ -57,11 +60,11 @@ namespace NewLife.NoDb.Storage
             // 不管是否空闲块，都是长度开头
             var len = view.ReadInt64(p);
             var flag = len & 0b0000_0111;
-            len &= 0b1111_1000;
+            len -= flag;
 
             Size = len;
-            Free = (len & 0b0000_00001) > 0;
-            PrevFree = (len & 0b0000_00010) > 0;
+            Free = (flag & 0b0000_00001) > 0;
+            PrevFree = (flag & 0b0000_00010) > 0;
 
             // 如果是空闲块，还要读取下一空闲指针
             if (Free) Next = view.ReadInt64(p + 8);
@@ -75,8 +78,7 @@ namespace NewLife.NoDb.Storage
             if (p < 0) throw new ArgumentNullException(nameof(Position));
 
             // 8字节对齐
-            var len = Size;
-            if ((len & 0b0000_0111) > 0) len = (len & 0b1111_1000) + 8;
+            var len = Align(Size);
 
             var len2 = len;
             if (Free) len2 |= 0b0000_00001;
@@ -125,6 +127,18 @@ namespace NewLife.NoDb.Storage
         /// <param name="flag"></param>
         /// <returns></returns>
         public static Boolean IsFree(Int64 flag) { return (flag & 0x01) == 0x01; }
+
+        /// <summary>8字节对齐</summary>
+        /// <param name="len">要对齐的长度</param>
+        /// <returns></returns>
+        private static Int64 Align(Int64 len)
+        {
+            // 8字节对齐
+            var flag = len & 0b0000_0111;
+            if (flag > 0) len -= flag + 8;
+
+            return len;
+        }
         #endregion
     }
 }

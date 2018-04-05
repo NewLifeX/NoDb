@@ -55,7 +55,7 @@ namespace NewLife.NoDb.IO
 
         /// <summary>内存视图</summary>
         /// <returns></returns>
-        public override String ToString() => $"{File}({Offset:n0}, {Size:n0}/{Capacity:n0})";
+        public override String ToString() => $"[{File}]({Offset:n0}, {Size:n0}/{Capacity:n0})";
         #endregion
 
         #region 视图扩容
