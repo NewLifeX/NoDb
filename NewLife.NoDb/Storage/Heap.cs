@@ -199,8 +199,10 @@ namespace NewLife.NoDb.Storage
                     mb.Position += mb.Size;
                     mb.Size = 0;
 
+                    mb = mb.ReadNext(vw) ?? mb;
+
                     // 前一块Next指向下一块
-                    SetNextOfPrev(prev, mb.ReadNext(vw));
+                    SetNextOfPrev(prev, mb);
                 }
                 else
                 {
@@ -254,14 +256,14 @@ namespace NewLife.NoDb.Storage
                 {
                     Position = mb.Position + mb.Size
                 };
-                right.Read(vw);
-                if (right.Free)
+                //right.Read(vw);
+                if (right.Read(vw) && right.Free)
                 {
                     mb.Size += right.Size;
                     mb.Next = right.Next;
 
                     // 头部
-                    if (_Free.Position == right.Position) _Free = mb;
+                    if (_Free.Position == right.Position) SetNextOfPrev(null, mb);
                 }
 
                 // 试图合并左边块
@@ -275,18 +277,21 @@ namespace NewLife.NoDb.Storage
                     {
                         Position = mb.Position - size
                     };
-                    left.Read(vw);
-                    if (left.Free)
+                    //left.Read(vw);
+                    if (left.Read(vw) && left.Free)
                     {
                         if (mb.Next > 0)
                         {
-                            if (left.Next != mb.Position + mb.Size) throw new InvalidDataException("数据指针错误");
+                            if (left.Next != mb.Position + len) throw new InvalidDataException("数据指针错误");
                         }
                         else
                             mb.Next = left.Next;
 
                         mb.Position = left.Position;
-                        mb.Size += 8 + left.Size;
+                        mb.Size += left.Size;
+
+                        // 头部
+                        if (left.Position == _Free.Position) SetNextOfPrev(null, mb);
                     }
                 }
                 // 找到左边最近空闲块，修改它的Next指针
@@ -299,8 +304,16 @@ namespace NewLife.NoDb.Storage
                         prev = fb;
                         if (!fb.MoveNext(vw)) break;
                     }
-                    if (fb.Position > mb.Position) SetNextOfPrev(prev, mb);
+                    if (fb.Position > mb.Position)
+                    {
+                        // 头部
+                        if (prev == null) mb.Next = _Free.Position;
+                        SetNextOfPrev(prev, mb);
+                    }
                 }
+
+                // 修改下一个相邻块的PrevFree
+                var next = new MemoryBlock { Position = mb.Position + mb.Size };
 
                 mb.Write(vw);
 

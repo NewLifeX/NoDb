@@ -81,10 +81,11 @@ namespace Test
             var ms = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
-            using (var hp = new Heap(mmf, 256, 373, false))
+            using (var hp = new Heap(mmf, 256, 375, false))
             {
                 hp.Log = XTrace.Log;
                 hp.Init();
+                hp.Clear();
 
                 count = 12;
                 var list = new Block[count];
@@ -113,9 +114,10 @@ namespace Test
                 hp.Free(list[5]);
                 for (var i = 0; i < count; i++)
                 {
-                    hp.Free(list[i]);
+                    if (i == 3 || i == 4 || i == 5) continue;
 
                     Console.WriteLine("释放 {0} Count={1} Used={2}", list[i], hp.Count, hp.Used);
+                    hp.Free(list[i]);
                 }
                 sw.Stop();
 

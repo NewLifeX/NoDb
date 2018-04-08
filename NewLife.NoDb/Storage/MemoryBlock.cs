@@ -1,4 +1,5 @@
 ﻿using System;
+using NewLife.Log;
 using NewLife.NoDb.IO;
 
 namespace NewLife.NoDb.Storage
@@ -55,10 +56,12 @@ namespace NewLife.NoDb.Storage
         #region 方法
         /// <summary>读取内存块，自动识别是否空闲</summary>
         /// <param name="view"></param>
-        public void Read(MemoryView view)
+        public Boolean Read(MemoryView view)
         {
             var p = Position;
             if (p < 0) throw new ArgumentNullException(nameof(Position));
+
+            if (p + 8 >= view.Capacity) return false;
 
             // 不管是否空闲块，都是长度开头
             var len = view.ReadInt64(p);
@@ -75,6 +78,10 @@ namespace NewLife.NoDb.Storage
                 //Prev = view.ReadInt64(p + 8);
                 Next = view.ReadInt64(p + 8);
             }
+
+            XTrace.WriteLine("Read " + this);
+
+            return true;
         }
 
         /// <summary>写入内存块</summary>
@@ -83,6 +90,8 @@ namespace NewLife.NoDb.Storage
         {
             var p = Position;
             if (p < 0) throw new ArgumentNullException(nameof(Position));
+
+            XTrace.WriteLine("Write " + this);
 
             // 8字节对齐
             var len = Align(Size);
@@ -98,6 +107,18 @@ namespace NewLife.NoDb.Storage
                 //view.Write(p + 8, Prev);
                 view.Write(p + 8, Next);
                 view.Write(p + len - 8, len2);
+
+                // 修改下一个相邻块的PrevFree
+                p += len;
+                if (p + 8 < view.Capacity)
+                {
+                    len = view.ReadInt64(p);
+                    if ((len & 0b0000_00010) == 0)
+                    {
+                        len |= 0b0000_00010;
+                        view.Write(p, len);
+                    }
+                }
             }
         }
 
@@ -121,6 +142,8 @@ namespace NewLife.NoDb.Storage
         /// <returns></returns>
         public MemoryBlock ReadNext(MemoryView view)
         {
+            if (Next == 0) return null;
+
             var mb = new MemoryBlock { Position = Next };
             if (Next != 0) mb.Read(view);
 
