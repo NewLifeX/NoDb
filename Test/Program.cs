@@ -81,13 +81,13 @@ namespace Test
             var ms = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
-            using (var hp = new Heap(mmf, 256, 375, false))
+            using (var hp = new Heap(mmf, 256, 375_000_000, false))
             {
-                hp.Log = XTrace.Log;
+                //hp.Log = XTrace.Log;
                 hp.Init();
                 hp.Clear();
 
-                count = 12;
+                //count = 12;
                 var list = new Block[count];
                 for (var i = 0; i < count; i++)
                 {
@@ -95,7 +95,9 @@ namespace Test
                     list[i] = hp.Alloc(15);
                     //list.Add(bk);
 
+#if DEBUG
                     Console.WriteLine("申请到 {0} Count={1} Used={2}", list[i], hp.Count, hp.Used);
+#endif
                 }
                 sw.Stop();
                 // 结果
@@ -116,7 +118,9 @@ namespace Test
                 {
                     if (i == 3 || i == 4 || i == 5) continue;
 
+#if DEBUG
                     Console.WriteLine("释放 {0} Count={1} Used={2}", list[i], hp.Count, hp.Used);
+#endif
                     hp.Free(list[i]);
                 }
                 sw.Stop();

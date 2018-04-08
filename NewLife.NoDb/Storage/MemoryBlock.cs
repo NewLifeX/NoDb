@@ -79,7 +79,9 @@ namespace NewLife.NoDb.Storage
                 Next = view.ReadInt64(p + 8);
             }
 
+#if DEBUG
             XTrace.WriteLine("Read " + this);
+#endif
 
             return true;
         }
@@ -91,7 +93,9 @@ namespace NewLife.NoDb.Storage
             var p = Position;
             if (p < 0) throw new ArgumentNullException(nameof(Position));
 
+#if DEBUG
             XTrace.WriteLine("Write " + this);
+#endif
 
             // 8字节对齐
             var len = Align(Size);
