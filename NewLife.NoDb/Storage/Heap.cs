@@ -179,7 +179,7 @@ namespace NewLife.NoDb.Storage
                 // 查找合适空闲块
                 var mb = _Free;
                 MemoryBlock prev = null;
-                while (mb.Size < len)
+                while (mb.Size < len && mb.Size > 0)
                 {
                     prev = mb;
                     if (!mb.MoveNext(vw)) break;
@@ -205,16 +205,16 @@ namespace NewLife.NoDb.Storage
                 else
                 {
                     // 前一块Next指向新切割出来的空闲块
-                    //SetNextOfPrev(prev, mb);
-                    if (prev != null)
-                    {
-                        prev.Next = mb.Position;
-                        mb.Prev = prev.Position;
-                        prev.Write(vw);
-                    }
-                    var next = mb.ReadNext(vw);
-                    next.Prev = mb.Position;
-                    next.Write(vw);
+                    SetNextOfPrev(prev, mb);
+                    //if (prev != null)
+                    //{
+                    //    prev.Next = mb.Position;
+                    //    //mb.Prev = prev.Position;
+                    //    prev.Write(vw);
+                    //}
+                    //var next = mb.ReadNext(vw);
+                    //next.Prev = mb.Position;
+                    //next.Write(vw);
 
                     mb.Write(vw);
                 }
@@ -245,7 +245,7 @@ namespace NewLife.NoDb.Storage
 
                 if (mb.Free) throw new ArgumentException("空间已经释放");
 
-                var len = mb.Size + 8;
+                var len = mb.Size;
                 mb.Free = true;
                 mb.Next = 0;
 
@@ -288,6 +288,18 @@ namespace NewLife.NoDb.Storage
                         mb.Position = left.Position;
                         mb.Size += 8 + left.Size;
                     }
+                }
+                // 找到左边最近空闲块，修改它的Next指针
+                else
+                {
+                    var fb = _Free;
+                    MemoryBlock prev = null;
+                    while (fb.Position < mb.Position)
+                    {
+                        prev = fb;
+                        if (!fb.MoveNext(vw)) break;
+                    }
+                    if (fb.Position > mb.Position) SetNextOfPrev(prev, mb);
                 }
 
                 mb.Write(vw);
@@ -347,6 +359,8 @@ namespace NewLife.NoDb.Storage
 
             return len;
         }
+
+        //private MemoryBlock FindFree()
 
         /// <summary>日志</summary>
         public ILog Log { get; set; }
