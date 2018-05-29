@@ -92,7 +92,8 @@ namespace Test
                 for (var i = 0; i < count; i++)
                 {
                     // 申请随机大小
-                    list[i] = hp.Alloc(15);
+                    var size = Rand.Next(8, 32);
+                    list[i] = hp.Alloc(size);
                     //list.Add(bk);
 
 #if DEBUG
