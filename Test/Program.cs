@@ -27,12 +27,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test2();
+                Test5();
             else
             {
                 try
                 {
-                    Test2();
+                    Test5();
                 }
                 catch (Exception ex)
                 {
@@ -186,6 +186,19 @@ namespace Test
                 XTrace.Log.Info("写入速度 {0:n0}ops", count * 1000L / ms);
             }
             XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);
+        }
+
+        static void Test5()
+        {
+            var count = 24 * 3600;
+            count = 13;
+            using (var db = new ListDb("List.db", count))
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    db.Set(i, Rand.NextBytes(30));
+                }
+            }
         }
     }
 }

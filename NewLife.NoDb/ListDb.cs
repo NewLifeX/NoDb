@@ -10,7 +10,7 @@ namespace NewLife.NoDb
     /// <remarks>
     /// 以顺序整数为键，例如，以秒数为键按天分库，存储时序数据
     /// </remarks>
-    public class ListDb
+    public class ListDb : DisposeBase
     {
         #region 属性
         /// <summary>幻数</summary>
@@ -54,6 +54,18 @@ namespace NewLife.NoDb
             //Index = new MemoryArray<Int32>(count, File);
             View = File.CreateView();
         }
+
+        /// <summary>销毁</summary>
+        /// <param name="disposing"></param>
+        protected override void OnDispose(Boolean disposing)
+        {
+            base.OnDispose(disposing);
+
+            Heap.TryDispose();
+            Index.TryDispose();
+            View.TryDispose();
+            File.TryDispose();
+        }
         #endregion
 
         #region 读写
@@ -76,7 +88,7 @@ namespace NewLife.NoDb
 
             // 数据区
             offset = vw.ReadInt32(16);
-            Heap = new Heap(File, offset);
+            Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
 
             return true;
         }
@@ -97,12 +109,20 @@ namespace NewLife.NoDb
                 offset = (Int32)Index.View.Offset;
                 size = (Int32)Index.View.Size;
             }
+            else
+                Index = new MemoryArray<Int64>(count, File, offset);
+
             vw.Write(8, offset);
             vw.Write(12, size);
 
             // 数据区
+            size += 32;
             offset = 0;
-            if (Heap != null) offset = (Int32)Heap.Position;
+            while (offset < size) offset += 1024;
+            if (Heap != null)
+                offset = (Int32)Heap.Position;
+            else
+                Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
             vw.Write(16, offset);
 
             Count = count;

@@ -93,11 +93,11 @@ namespace NewLife.NoDb.IO
                     }
 
                     // 底层边界4k对齐，Size不一定对齐
-                    step = maxsize - Offset - Size;
+                    step = maxsize - Size;
                 }
 
                 // 注意末端边界
-                if (step > remain) step = remain;
+                if (remain > 0 && step > remain) step = remain;
 
                 Size += step;
 

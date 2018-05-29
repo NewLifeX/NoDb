@@ -39,12 +39,12 @@ namespace NewLife.NoDb.Storage
         /// <param name="offset"></param>
         /// <param name="size"></param>
         /// <param name="init">自动初始化加载堆</param>
-        public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = -1, Boolean init = true)
+        public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = 0, Boolean init = true)
         {
             if (mf == null) throw new ArgumentNullException(nameof(mf));
             // 内存映射未初始化时 mf.Capacity=0
-            if (offset < 0 || offset >= mf.Capacity && mf.Capacity > 0) throw new ArgumentOutOfRangeException(nameof(offset));
-            if (size < 0) size = mf.Capacity - offset;
+            //if (offset < 0 || offset >= mf.Capacity && mf.Capacity > 0) throw new ArgumentOutOfRangeException(nameof(offset));
+            //if (size < 0) size = mf.Capacity - offset;
 
             Position = offset;
             Size = size;
