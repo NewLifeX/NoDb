@@ -30,7 +30,7 @@ namespace NewLife.NoDb.Storage
         /// <summary>空闲块</summary>
         private MemoryBlock _Free;
 
-        private Object SyncRoot = new Object();
+        private readonly Object SyncRoot = new Object();
         #endregion
 
         #region 构造

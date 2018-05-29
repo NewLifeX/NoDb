@@ -225,11 +225,6 @@ namespace NewLife.NoDb.IO
             {
                 view.SafeMemoryMappedViewHandle.ReleasePointer();
             }
-
-            //var arr = new Byte[num];
-            //view.ReadArray(offset, arr, 0, num);
-
-            //return arr;
         }
 
         /// <summary>写入字节数组</summary>

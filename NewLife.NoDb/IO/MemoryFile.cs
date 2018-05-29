@@ -24,21 +24,26 @@ namespace NewLife.NoDb.IO
         /// <summary>容量。默认0，首次使用初始化</summary>
         public Int64 Capacity { get; private set; }
 
-        private volatile Int32 _Version;
         /// <summary>版本</summary>
-        public Int32 Version => _Version;
+        public Int32 Version { get; private set; }
 
-        private Object SyncRoot = new Object();
+        /// <summary>只读</summary>
+        public Boolean Readonly { get; private set; }
+
+        private readonly Object SyncRoot = new Object();
         #endregion
 
         #region 构造
         /// <summary>实例化内存映射文件</summary>
-        /// <param name="file"></param>
-        public MemoryFile(String file)
+        /// <param name="file">文件</param>
+        /// <param name="readOnly">只读。默认false</param>
+        public MemoryFile(String file, Boolean readOnly = false)
         {
             FileName = file;
 
             if (!file.IsNullOrEmpty()) Name = Path.GetFileNameWithoutExtension(file);
+
+            Readonly = readOnly;
 
 #if DEBUG
             Log = XTrace.Log;
@@ -92,30 +97,39 @@ namespace NewLife.NoDb.IO
                 //Stream.TryDispose();
 
                 var mapName = "MMF_" + Name;
+                var access = Readonly ? MemoryMappedFileAccess.Read : MemoryMappedFileAccess.ReadWrite;
 
                 // 不带文件的纯内存映射
                 if (FileName.IsNullOrEmpty())
                 {
                     //Stream = null;
                     Capacity = capacity;
-                    Map = MemoryMappedFile.CreateOrOpen(mapName, capacity, MemoryMappedFileAccess.ReadWrite, MemoryMappedFileOptions.DelayAllocatePages, null, HandleInheritability.None);
+                    Map = MemoryMappedFile.CreateOrOpen(mapName, capacity, access, MemoryMappedFileOptions.DelayAllocatePages, null, HandleInheritability.None);
                 }
                 else
                 {
                     // 使用文件流可以控制共享读写，让别的进程也可以读写文件
                     var fs = Stream;
-                    if (fs == null) fs = new FileStream(FileName.GetFullPath(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
-                    if (fs.Length < capacity) fs.SetLength(capacity);
+                    if (Readonly)
+                    {
+                        if (fs == null) fs = new FileStream(FileName.GetFullPath(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
+                        if (fs.Length < capacity) throw new InvalidDataException($"文件长度不足 {capacity}");
+                    }
+                    else
+                    {
+                        if (fs == null) fs = new FileStream(FileName.GetFullPath(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
+                        if (fs.Length < capacity) fs.SetLength(capacity);
+                    }
 
                     Stream = fs;
                     Capacity = fs.Length;
 
                     // 最大容量为0表示使用文件流最大值
-                    Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, true);
+                    Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, access, null, HandleInheritability.None, true);
                 }
 
                 //Interlocked.Increment(ref _Version);
-                _Version++;
+                Version++;
             }
 
             return true;
