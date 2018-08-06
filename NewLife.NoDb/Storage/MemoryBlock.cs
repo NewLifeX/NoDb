@@ -110,7 +110,7 @@ namespace NewLife.NoDb.Storage
             {
                 //view.Write(p + 8, Prev);
                 view.Write(p + 8, Next);
-                view.Write(p + len - 8, len2);
+                if (Next > 0) view.Write(p + len - 8, len2);
 
                 // 修改下一个相邻块的PrevFree
                 p += len;

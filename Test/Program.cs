@@ -142,22 +142,28 @@ namespace Test
         {
             using (var mmf = new MemoryFile("list.db"))
             {
-                var list = new MemoryList<Block>(mmf, 16, 1600, false);
-                for (var i = 0; i < 7; i++)
+                var arr = new MemoryArray<Int64>(mmf, 1024 * 1024);
+                for (var i = 0; i < 100; i++)
                 {
-                    list.Add(new Block(i * 16, 998));
+                    var n = arr[i];
+                    Console.WriteLine("{0}\t={1}", i, n);
                 }
-                Console.WriteLine(list.Count);
-                list.Insert(2, new Block(333, 444));
-                var idx = list.IndexOf(new Block(32, 998));
-                Console.WriteLine(idx);
-                list.RemoveAt(5);
-                foreach (var item in list)
-                {
-                    Console.WriteLine(item);
-                }
-                var arr = list.ToArray();
-                //list.Dispose();
+
+                //var list = new MemoryList<Block>(mmf, 16, 1600, false);
+                //for (var i = 0; i < 7; i++)
+                //{
+                //    list.Add(new Block(i * 16, 998));
+                //}
+                //Console.WriteLine(list.Count);
+                //list.Insert(2, new Block(333, 444));
+                //var idx = list.IndexOf(new Block(32, 998));
+                //Console.WriteLine(idx);
+                //list.RemoveAt(5);
+                //foreach (var item in list)
+                //{
+                //    Console.WriteLine(item);
+                //}
+                //var arr = list.ToArray();
             }
         }
 

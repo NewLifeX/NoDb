@@ -21,10 +21,10 @@ namespace NewLife.NoDb.Collections
         static MemoryArray() { _HeadSize = 0; }
 
         /// <summary>实例化一个内存数组</summary>
-        /// <param name="length">数组长度</param>
         /// <param name="mf">内存文件</param>
+        /// <param name="length">数组长度</param>
         /// <param name="offset">内存偏移</param>
-        public MemoryArray(Int64 length, MemoryFile mf, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T)))
+        public MemoryArray(MemoryFile mf, Int64 length, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T)))
         {
             Length = Capacity;
         }

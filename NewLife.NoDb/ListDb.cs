@@ -87,7 +87,7 @@ namespace NewLife.NoDb
             var size = reader.ReadInt32();
             Count = size / sizeof(Int64);
 
-            Index = new MemoryArray<Int64>(Count, File, offset);
+            Index = new MemoryArray<Int64>(File, Count, offset);
 
             // 数据区
             offset = reader.ReadInt32();
@@ -116,7 +116,7 @@ namespace NewLife.NoDb
                 size = (Int32)Index.View.Size;
             }
             else
-                Index = new MemoryArray<Int64>(count, File, offset);
+                Index = new MemoryArray<Int64>(File, count, offset);
 
             writer.Write(offset);
             writer.Write(size);
@@ -147,6 +147,7 @@ namespace NewLife.NoDb
 
                 var n = Index[idx];
                 var bk = new Block(n >> 32, n & 0xFFFF_FFFF);
+                Console.WriteLine($"[{idx}]=[{bk.Position}, {bk.Size}]");
 
                 return bk;
             }
