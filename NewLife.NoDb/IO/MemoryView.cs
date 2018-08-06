@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
@@ -112,11 +113,23 @@ namespace NewLife.NoDb.IO
 
                 _view = File.Map.CreateViewAccessor(Offset, Size);
 
-                // 版本必须一直，如果内存文件扩容后版本改变，这里也要重新生成视图
+                // 版本必须一致，如果内存文件扩容后版本改变，这里也要重新生成视图
                 _Version = File.Version;
 
                 return _view;
             }
+        }
+
+        /// <summary>获取视图数据流，自动扩大</summary>
+        /// <param name="offset">内存偏移</param>
+        /// <param name="size">内存大小</param>
+        /// <returns></returns>
+        public Stream GetStream(Int64 offset, Int64 size)
+        {
+            // 自动扩容
+            var vw = GetView(offset, size);
+
+            return File.Map.CreateViewStream(Offset, Size);
         }
         #endregion
 

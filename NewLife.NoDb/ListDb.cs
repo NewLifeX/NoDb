@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using NewLife.NoDb.Collections;
 using NewLife.NoDb.IO;
 using NewLife.NoDb.Storage;
@@ -72,22 +73,24 @@ namespace NewLife.NoDb
         private Boolean Read()
         {
             var vw = File.CreateView(0, 1024);
+            var ms = vw.GetStream(0, 64);
+            var reader = new BinaryReader(ms);
 
-            var magic = vw.ReadBytes(0, 4).ToStr();
+            var magic = reader.ReadBytes(4).ToStr();
             if (Magic != magic) return false;
 
             // 版本
-            Version = vw.ReadInt32(4);
+            Version = reader.ReadInt32();
 
             // 索引器位置和个数
-            var offset = vw.ReadInt32(8);
-            var size = vw.ReadInt32(12);
+            var offset = reader.ReadInt32();
+            var size = reader.ReadInt32();
             Count = size / sizeof(Int64);
 
             Index = new MemoryArray<Int64>(Count, File, offset);
 
             // 数据区
-            offset = vw.ReadInt32(16);
+            offset = reader.ReadInt32();
             Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
 
             return true;
@@ -96,10 +99,13 @@ namespace NewLife.NoDb
         private void Write(Int32 count)
         {
             var vw = File.CreateView(0, 1024);
-            vw.WriteBytes(0, Magic.GetBytes());
+            var ms = vw.GetStream(0, 64);
+            var writer = new BinaryWriter(ms);
+
+            writer.Write(Magic.GetBytes());
 
             // 版本
-            vw.Write(4, Version);
+            writer.Write(Version);
 
             // 索引器
             var offset = 64;
@@ -112,8 +118,8 @@ namespace NewLife.NoDb
             else
                 Index = new MemoryArray<Int64>(count, File, offset);
 
-            vw.Write(8, offset);
-            vw.Write(12, size);
+            writer.Write(offset);
+            writer.Write(size);
 
             // 数据区
             size += 32;
@@ -123,7 +129,7 @@ namespace NewLife.NoDb
                 offset = (Int32)Heap.Position;
             else
                 Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
-            vw.Write(16, offset);
+            writer.Write(offset);
 
             Count = count;
         }

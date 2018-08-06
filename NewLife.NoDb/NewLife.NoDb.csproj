@@ -35,6 +35,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NewLife.Core, Version=7.3.6790.27910, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NewLife.Core.7.3.6790.27910\lib\net45\NewLife.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -65,9 +68,7 @@
     <Compile Include="Storage\MemoryBlock.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core">
-      <Version>7.0.6722.39740</Version>
-    </PackageReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

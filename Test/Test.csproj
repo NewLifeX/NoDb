@@ -36,6 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NewLife.Core, Version=7.3.6790.27910, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NewLife.Core.7.3.6790.27910\lib\net45\NewLife.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -53,6 +56,7 @@
     <None Include="1.logtxt" />
     <None Include="2.logtxt" />
     <None Include="App.config" />
+    <None Include="packages.config" />
     <None Include="队列测试1.xlsx" />
   </ItemGroup>
   <ItemGroup>
@@ -60,11 +64,6 @@
       <Project>{10bbcb6a-0fc3-4145-b39f-ad63e328a585}</Project>
       <Name>NewLife.NoDb</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="NewLife.Core">
-      <Version>7.0.6722.39740</Version>
-    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
