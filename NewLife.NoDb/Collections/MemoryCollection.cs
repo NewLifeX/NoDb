@@ -189,7 +189,7 @@ namespace NewLife.NoDb.Collections
         /// <summary>获取位置</summary>
         /// <param name="idx"></param>
         /// <returns></returns>
-        protected static Int64 GetP(Int64 idx) { return idx * _ItemSize + _HeadSize; }
+        protected static Int64 GetP(Int64 idx) => (idx * _ItemSize) + _HeadSize;
 
         /// <summary>获取集合大小</summary>
         /// <returns></returns>

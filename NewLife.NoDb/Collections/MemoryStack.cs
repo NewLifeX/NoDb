@@ -19,7 +19,7 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 构造
-        static MemoryStack() { _HeadSize = 8; }
+        static MemoryStack() => _HeadSize = 8;
 
         /// <summary>实例化一个内存栈</summary>
         /// <param name="mf">内存文件</param>
@@ -37,19 +37,23 @@ namespace NewLife.NoDb.Collections
 
         #region 基本方法
         /// <summary>元素个数</summary>
-        Int32 IReadOnlyCollection<T>.Count => (Int32)Count;
+        Int32 IReadOnlyCollection<T>.Count => Count;
 
         /// <summary>获取栈顶</summary>
         /// <returns></returns>
-        public T Peek() { return this[Count - 1]; }
+        public T Peek() => this[Count - 1];
 
         /// <summary>弹出栈顶</summary>
         /// <returns></returns>
         public T Pop()
         {
-            var n = _Count;
-            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count));
-            n = Interlocked.Decrement(ref _Count);
+            var n = 0;
+            do
+            {
+                n = Count;
+                if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count));
+            }
+            while (Interlocked.CompareExchange(ref _Count, n - 1, n) != n);
 
             View.Read<T>(GetP(n), out var val);
 
@@ -60,25 +64,23 @@ namespace NewLife.NoDb.Collections
         /// <param name="item"></param>
         public void Push(T item)
         {
-            var n = Count;
-            if (n + 1 >= Capacity) throw new InvalidOperationException("容量不足");
-            n = Interlocked.Increment(ref _Count);
+            var n = 0;
+            do
+            {
+                n = Count;
+                if (n >= Capacity) throw new InvalidOperationException("容量不足");
+            }
+            while (Interlocked.CompareExchange(ref _Count, n + 1, n) != n);
 
-            View.Write(GetP(n - 1), ref item);
+            View.Write(GetP(n), ref item);
         }
         #endregion
 
         #region 定时保存
         /// <summary>定时保存数据到文件</summary>
-        protected override void OnSave()
-        {
-            View.Write(0, _Count);
-        }
+        protected override void OnSave() => View.Write(0, _Count);
 
-        private void OnLoad()
-        {
-            _Count = View.ReadInt32(0);
-        }
+        private void OnLoad() => _Count = View.ReadInt32(0);
         #endregion
     }
 }

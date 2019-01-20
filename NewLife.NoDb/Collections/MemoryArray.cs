@@ -18,7 +18,7 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 构造
-        static MemoryArray() { _HeadSize = 0; }
+        static MemoryArray() => _HeadSize = 0;
 
         /// <summary>实例化一个内存数组</summary>
         /// <param name="mf">内存文件</param>
@@ -40,11 +40,11 @@ namespace NewLife.NoDb.Collections
 
         T IList<T>.this[Int32 index] { get => this[index]; set => this[index] = value; }
 
-        Int32 IList<T>.IndexOf(T item) { return (Int32)IndexOf(item); }
+        Int32 IList<T>.IndexOf(T item) => (Int32)IndexOf(item);
         #endregion
 
         #region IList<T>接口
-        Int32 ICollection<T>.Count => (Int32)Length;
+        Int32 ICollection<T>.Count => Length;
 
         Boolean ICollection<T>.IsReadOnly => true;
 
