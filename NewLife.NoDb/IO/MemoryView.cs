@@ -100,8 +100,8 @@ namespace NewLife.NoDb.IO
                     step = maxsize - Size;
                 }
 
-                // 注意末端边界
-                if (remain > 0 && step > remain) step = remain;
+                // 注意末端边界，对齐后可能导致越界
+                if (remain >= 0 && step > remain) step = remain;
 
                 Size += step;
 
