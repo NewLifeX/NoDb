@@ -79,12 +79,15 @@ namespace NewLife.NoDb.IO
 
                 // 最小增量 10%
                 var step = maxsize - Size;
-                if (step < Size / 10) step = Size / 10;
+                if (step < 0)
+                    step = 0;
+                else if (step < Size / 10)
+                    step = Size / 10;
 
                 // 扩大视图，4k 对齐边界
                 if (Capacity >= 4096)
                 {
-                    maxsize += offset;
+                    //maxsize += offset;
                     if (maxsize < 4096)
                         maxsize = 4096;
                     else
