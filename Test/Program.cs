@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.IO;
-using System.IO.MemoryMappedFiles;
 using NewLife.Caching;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;
 using NewLife.NoDb.IO;
 using NewLife.NoDb.Storage;
-using NewLife.Reflection;
 using NewLife.Security;
-using NewLife.Configuration;
-using NewLife.Xml;
 
 namespace Test
 {
@@ -27,12 +20,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test5();
+                Test2();
             else
             {
                 try
                 {
-                    Test5();
+                    Test2();
                 }
                 catch (Exception ex)
                 {
@@ -77,8 +70,8 @@ namespace Test
             //GC.TryStartNoGCRegion(10_000_000);
 
             var count = 10_000_000L;
-            var sw = Stopwatch.StartNew();
             var ms = 0L;
+            var total = 0L;
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
             using (var hp = new Heap(mmf, 256, 375_000_000, false))
@@ -87,6 +80,9 @@ namespace Test
                 hp.Init();
                 hp.Clear();
 
+                Console.WriteLine("申请[{0:n0}]块随机大小（8~32字节）的内存", count);
+
+                var sw = Stopwatch.StartNew();
                 //count = 12;
                 var list = new Block[count];
                 for (var i = 0; i < count; i++)
@@ -106,12 +102,14 @@ namespace Test
                 //{
                 //    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
                 //}
-                Console.WriteLine("{0} Count={1} Used={2}", hp, hp.Count, hp.Used);
+                Console.WriteLine("{0} Count={1:n0} Used={2:n0}", hp, hp.Count, hp.Used);
 
                 ms = sw.ElapsedMilliseconds;
+                total += ms;
                 Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
 
-                sw.Reset(); sw.Restart();
+                Console.WriteLine("释放[{0:n0}]块内存", count);
+                sw.Restart();
                 hp.Free(list[4]);
                 hp.Free(list[3]);
                 hp.Free(list[5]);
@@ -127,15 +125,16 @@ namespace Test
                 sw.Stop();
 
                 // 结果
-                Console.WriteLine("{0} Count={1} Used={2}", hp, hp.Count, hp.Used);
+                Console.WriteLine("{0} Count={1:n0} Used={2:n0}", hp, hp.Count, hp.Used);
                 //foreach (var pi in hp.GetType().GetProperties())
                 //{
                 //    Console.WriteLine("{0}\t{1:n0}", pi.Name, hp.GetValue(pi));
                 //}
                 ms = sw.ElapsedMilliseconds;
+                total += ms;
                 Console.WriteLine("耗时：{0:n0}ms 速度 {1:n0}ops", ms, count * 1000L / ms);
             }
-            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);
+            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", total, count * 1000L / total);
         }
 
         static void Test3()
@@ -175,7 +174,7 @@ namespace Test
             var sw = Stopwatch.StartNew();
             var ms = 0L;
             using (var mmf = new MemoryFile("queue.db") { Log = XTrace.Log })
-            using (var qu = new MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false))
+            using (var qu = new NewLife.NoDb.Collections.MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false))
             {
                 // XTrace.Log.Info("文件大小：{0:n0}GB", size);
                 XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
