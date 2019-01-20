@@ -19,12 +19,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test2();
+                Test3();
             else
             {
                 try
                 {
-                    Test2();
+                    Test3();
                 }
                 catch (Exception ex)
                 {
@@ -143,14 +143,29 @@ namespace Test
 
         static void Test3()
         {
+            var count = 10_000_000L;
             using (var mmf = new MemoryFile("list.db"))
             {
-                var arr = new MemoryArray<Int64>(mmf, 1024 * 1024);
-                for (var i = 0; i < 100; i++)
+                var sw = Stopwatch.StartNew();
+
+                var arr = new MemoryArray<Int64>(mmf, count);
+                for (var i = 0; i < count; i++)
+                {
+                    arr[i] = Rand.Next();
+                }
+
+                sw.Stop();
+                var ms = sw.ElapsedMilliseconds;
+                Console.WriteLine("赋值[{0:n0}] {1:n0}tps", count, count * 1000L / ms);
+
+                sw.Restart();
+                for (var i = 0; i < count; i++)
                 {
                     var n = arr[i];
-                    Console.WriteLine("{0}\t={1}", i, n);
                 }
+                sw.Stop();
+                ms = sw.ElapsedMilliseconds;
+                Console.WriteLine("取值[{0:n0}] {1:n0}tps", count, count * 1000L / ms);
 
                 //var list = new MemoryList<Block>(mmf, 16, 1600, false);
                 //for (var i = 0; i < 7; i++)
