@@ -15,13 +15,13 @@ namespace NewLife.NoDb
     {
         #region 属性
         /// <summary>幻数</summary>
-        public const String Magic = "NoDb";
+        public const String Magic = "ListDb";
 
         /// <summary>映射文件</summary>
         public MemoryFile File { get; }
 
         /// <summary>版本</summary>
-        public Int32 Version { get; private set; } = 1;
+        public Int16 Version { get; private set; } = 1;
 
         /// <summary>顺序整数构成的索引</summary>
         public MemoryArray<Int64> Index { get; private set; }
@@ -53,7 +53,8 @@ namespace NewLife.NoDb
             }
 
             //Index = new MemoryArray<Int32>(count, File);
-            View = File.CreateView();
+            //View = File.CreateView(DataOffset);
+            View = Heap.View;
         }
 
         /// <summary>销毁</summary>
@@ -72,66 +73,74 @@ namespace NewLife.NoDb
         #region 读写
         private Boolean Read()
         {
-            var vw = File.CreateView(0, 1024);
-            var ms = vw.GetStream(0, 64);
-            var reader = new BinaryReader(ms);
+            using (var vw = File.CreateView(0, 1024))
+            {
+                var ms = vw.GetStream(0, 64);
+                var reader = new BinaryReader(ms);
 
-            var magic = reader.ReadBytes(4).ToStr();
-            if (Magic != magic) return false;
+                var magic = reader.ReadBytes(6).ToStr();
+                if (Magic != magic) return false;
 
-            // 版本
-            Version = reader.ReadInt32();
+                // 版本
+                Version = reader.ReadInt16();
 
-            // 索引器位置和个数
-            var offset = reader.ReadInt32();
-            var size = reader.ReadInt32();
-            Count = size / sizeof(Int64);
+                // 索引器位置和个数
+                var offset = reader.ReadInt32();
+                var size = reader.ReadInt32();
+                Count = size / sizeof(Int64);
 
-            Index = new MemoryArray<Int64>(File, Count, offset);
+                Index = new MemoryArray<Int64>(File, Count, offset);
 
-            // 数据区
-            offset = reader.ReadInt32();
-            Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
+                // 数据区
+                offset = reader.ReadInt32();
+                Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
+            }
 
             return true;
         }
 
         private void Write(Int32 count)
         {
-            var vw = File.CreateView(0, 1024);
-            var ms = vw.GetStream(0, 64);
-            var writer = new BinaryWriter(ms);
-
-            writer.Write(Magic.GetBytes());
-
-            // 版本
-            writer.Write(Version);
-
-            // 索引器
-            var offset = 64;
-            var size = count * sizeof(Int64);
-            if (Index != null)
+            using (var vw = File.CreateView(0, 1024))
             {
-                offset = (Int32)Index.View.Offset;
-                size = (Int32)Index.View.Size;
+                var ms = vw.GetStream(0, 64);
+                var writer = new BinaryWriter(ms);
+
+                writer.Write(Magic.GetBytes());
+
+                // 版本
+                writer.Write(Version);
+
+                // 索引器
+                var offset = 64;
+                var size = count * sizeof(Int64);
+                if (Index != null)
+                {
+                    offset = (Int32)Index.View.Offset;
+                    size = (Int32)Index.View.Size;
+                }
+                else
+                    Index = new MemoryArray<Int64>(File, count, offset);
+
+                // 索引区全部置空
+                Index.Clear();
+                Index.View.Flush();
+
+                writer.Write(offset);
+                writer.Write(size);
+
+                // 数据区
+                size += 32;
+                offset = 0;
+                while (offset < size) offset += 1024;
+                if (Heap != null)
+                    offset = (Int32)Heap.Position;
+                else
+                    Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
+                writer.Write(offset);
+
+                Count = count;
             }
-            else
-                Index = new MemoryArray<Int64>(File, count, offset);
-
-            writer.Write(offset);
-            writer.Write(size);
-
-            // 数据区
-            size += 32;
-            offset = 0;
-            while (offset < size) offset += 1024;
-            if (Heap != null)
-                offset = (Int32)Heap.Position;
-            else
-                Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
-            writer.Write(offset);
-
-            Count = count;
         }
         #endregion
 
@@ -147,7 +156,7 @@ namespace NewLife.NoDb
 
                 var n = Index[idx];
                 var bk = new Block(n >> 32, n & 0xFFFF_FFFF);
-                Console.WriteLine($"[{idx}]=[{bk.Position}, {bk.Size}]");
+                //Console.WriteLine($"[{idx}]=[{bk.Position}, {bk.Size}]");
 
                 return bk;
             }
@@ -184,7 +193,8 @@ namespace NewLife.NoDb
             var bk = this[idx];
             if (bk.Position == 0 || bk.Size == 0) bk = Heap.Alloc(value.Length);
 
-            View.WriteBytes(bk.Position, value);
+            // View内部竟然没有叠加偏移量
+            View.WriteBytes(View.Offset + bk.Position, value);
 
             this[idx] = bk;
         }
