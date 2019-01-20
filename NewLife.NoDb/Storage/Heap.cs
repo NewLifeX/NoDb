@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using NewLife.Log;
 using NewLife.NoDb.IO;
+using NewLife.Threading;
 
 namespace NewLife.NoDb.Storage
 {
@@ -58,6 +59,10 @@ namespace NewLife.NoDb.Storage
         protected override void OnDispose(Boolean disposing)
         {
             base.OnDispose(disposing);
+
+            Commit();
+            _timer.TryDispose();
+            _timer = null;
 
             View.TryDispose();
         }
@@ -160,6 +165,33 @@ namespace NewLife.NoDb.Storage
 
             _Free = mb;
         }
+
+        private Int32 _commits;
+        /// <summary>提交变更到磁盘</summary>
+        public void Commit()
+        {
+            var mts = _commits;
+            if (mts == 0) return;
+
+            Interlocked.Add(ref _commits, -mts);
+
+            Save();
+        }
+
+        private TimerX _timer;
+        private void SetChange()
+        {
+            Interlocked.Increment(ref _commits);
+
+            if (_timer == null)
+            {
+                lock (this)
+                {
+                    // 定时提交
+                    if (_timer == null) _timer = new TimerX(s => Commit(), null, 0, 1_000, "Heap");
+                }
+            }
+        }
         #endregion
 
         #region 核心分配算法
@@ -208,15 +240,6 @@ namespace NewLife.NoDb.Storage
                 {
                     // 前一块Next指向新切割出来的空闲块
                     SetNextOfPrev(prev, mb);
-                    //if (prev != null)
-                    //{
-                    //    prev.Next = mb.Position;
-                    //    //mb.Prev = prev.Position;
-                    //    prev.Write(vw);
-                    //}
-                    //var next = mb.ReadNext(vw);
-                    //next.Prev = mb.Position;
-                    //next.Write(vw);
 
                     mb.Write(vw);
                 }
@@ -226,6 +249,8 @@ namespace NewLife.NoDb.Storage
 
                 Interlocked.Increment(ref _Count);
                 Interlocked.Add(ref _Used, rs.Size);
+
+                SetChange();
 
                 return rs.GetData();
             }
@@ -319,6 +344,8 @@ namespace NewLife.NoDb.Storage
 
                 Interlocked.Decrement(ref _Count);
                 Interlocked.Add(ref _Used, -len);
+
+                SetChange();
             }
         }
 
@@ -349,6 +376,8 @@ namespace NewLife.NoDb.Storage
 
                 // 释放旧的
                 Free(bk);
+
+                SetChange();
 
                 return bk2;
             }
@@ -381,10 +410,7 @@ namespace NewLife.NoDb.Storage
         /// <summary>写日志</summary>
         /// <param name="format"></param>
         /// <param name="args"></param>
-        public void WriteLog(String format, params Object[] args)
-        {
-            Log?.Info(format, args);
-        }
+        public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
         #endregion
     }
 }

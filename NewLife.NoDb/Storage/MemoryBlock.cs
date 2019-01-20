@@ -1,6 +1,8 @@
 ﻿using System;
-using NewLife.Log;
 using NewLife.NoDb.IO;
+#if DEBUG
+using NewLife.Log;
+#endif
 
 namespace NewLife.NoDb.Storage
 {
@@ -40,9 +42,6 @@ namespace NewLife.NoDb.Storage
         /// <summary>前一块空闲</summary>
         public Boolean PrevFree { get; set; }
 
-        ///// <summary>前一个空闲块</summary>
-        //public Int64 Prev { get; set; }
-
         /// <summary>下一个空闲块</summary>
         public Int64 Next { get; set; }
         #endregion
@@ -74,10 +73,9 @@ namespace NewLife.NoDb.Storage
 
             // 如果是空闲块，还要读取前后空闲指针，最后8字节则可以不用读取
             if (Free)
-            {
-                //Prev = view.ReadInt64(p + 8);
                 Next = view.ReadInt64(p + 8);
-            }
+            else
+                Next = 0;
 
 #if DEBUG
             XTrace.WriteLine("Read " + this);
@@ -108,7 +106,6 @@ namespace NewLife.NoDb.Storage
             // 空闲块有下一块指针，尾部也有长度标记
             if (Free)
             {
-                //view.Write(p + 8, Prev);
                 view.Write(p + 8, Next);
                 if (Next > 0) view.Write(p + len - 8, len2);
 
@@ -117,6 +114,7 @@ namespace NewLife.NoDb.Storage
                 if (p + 8 < view.Capacity)
                 {
                     len = view.ReadInt64(p);
+                    // 标记下一相邻块的PrevFree为1
                     if ((len & 0b0000_00010) == 0)
                     {
                         len |= 0b0000_00010;
@@ -128,18 +126,7 @@ namespace NewLife.NoDb.Storage
 
         /// <summary>获取数据区域</summary>
         /// <returns></returns>
-        public Block GetData() { return new Block(Position + 8, Size - 8); }
-
-        ///// <summary>读取前一块</summary>
-        ///// <param name="view"></param>
-        ///// <returns></returns>
-        //public MemoryBlock ReadPrev(MemoryView view)
-        //{
-        //    var mb = new MemoryBlock { Position = Prev };
-        //    if (Prev != 0) mb.Read(view);
-
-        //    return mb;
-        //}
+        public Block GetData() => new Block(Position + 8, Size - 8);
 
         /// <summary>读取下一块</summary>
         /// <param name="view"></param>
@@ -149,7 +136,7 @@ namespace NewLife.NoDb.Storage
             if (Next == 0) return null;
 
             var mb = new MemoryBlock { Position = Next };
-            if (Next != 0) mb.Read(view);
+            mb.Read(view);
 
             return mb;
         }
@@ -172,7 +159,7 @@ namespace NewLife.NoDb.Storage
         /// <summary>是否空闲</summary>
         /// <param name="flag"></param>
         /// <returns></returns>
-        public static Boolean IsFree(Int64 flag) { return (flag & 0x01) == 0x01; }
+        public static Boolean IsFree(Int64 flag) => (flag & 0x01) == 0x01;
 
         /// <summary>8字节对齐</summary>
         /// <param name="len">要对齐的长度</param>

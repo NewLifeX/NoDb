@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using NewLife.Caching;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;
@@ -72,13 +71,18 @@ namespace Test
             var count = 10_000_000L;
             var ms = 0L;
             var total = 0L;
+#if DEBUG
+            count = 10;
+#endif
 
             using (var mmf = new MemoryFile("heap.db") { Log = XTrace.Log })
             using (var hp = new Heap(mmf, 256, 375_000_000, false))
             {
-                //hp.Log = XTrace.Log;
+#if DEBUG
+                hp.Log = XTrace.Log;
+#endif
                 hp.Init();
-                hp.Clear();
+                //hp.Clear();
 
                 Console.WriteLine("申请[{0:n0}]块随机大小（8~32字节）的内存", count);
 
