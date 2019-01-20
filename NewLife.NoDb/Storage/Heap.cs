@@ -188,7 +188,7 @@ namespace NewLife.NoDb.Storage
                 lock (this)
                 {
                     // 定时提交
-                    if (_timer == null) _timer = new TimerX(s => Commit(), null, 0, 1_000, "Heap");
+                    if (_timer == null) _timer = new TimerX(s => Commit(), null, 0, 1_000, "NoDb");
                 }
             }
         }

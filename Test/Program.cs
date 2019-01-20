@@ -19,12 +19,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test3();
+                TestQueue();
             else
             {
                 try
                 {
-                    Test3();
+                    TestQueue();
                 }
                 catch (Exception ex)
                 {
@@ -141,7 +141,7 @@ namespace Test
             XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", total, count * 1000L / total);
         }
 
-        static void Test3()
+        static void TestArray()
         {
             var count = 10_000_000L;
             using (var mmf = new MemoryFile("list.db"))
@@ -151,7 +151,7 @@ namespace Test
                 var arr = new MemoryArray<Int64>(mmf, count);
                 for (var i = 0; i < count; i++)
                 {
-                    arr[i] = Rand.Next();
+                    arr[i] = i;
                 }
 
                 sw.Stop();
@@ -166,50 +166,44 @@ namespace Test
                 sw.Stop();
                 ms = sw.ElapsedMilliseconds;
                 Console.WriteLine("取值[{0:n0}] {1:n0}tps", count, count * 1000L / ms);
-
-                //var list = new MemoryList<Block>(mmf, 16, 1600, false);
-                //for (var i = 0; i < 7; i++)
-                //{
-                //    list.Add(new Block(i * 16, 998));
-                //}
-                //Console.WriteLine(list.Count);
-                //list.Insert(2, new Block(333, 444));
-                //var idx = list.IndexOf(new Block(32, 998));
-                //Console.WriteLine(idx);
-                //list.RemoveAt(5);
-                //foreach (var item in list)
-                //{
-                //    Console.WriteLine(item);
-                //}
-                //var arr = list.ToArray();
             }
         }
 
-        static void Test4()
+        static void TestQueue()
         {
-            //var count = Config.GetConfig("readcount", 10_000_000L);
-            // var size = Config.GetConfig("size", 16);
-            var count = 80_000_000L;
-            var sw = Stopwatch.StartNew();
-            var ms = 0L;
+            var count = 100_000_000L;
             using (var mmf = new MemoryFile("queue.db") { Log = XTrace.Log })
             using (var qu = new NewLife.NoDb.Collections.MemoryQueue<Block>(mmf, 16, 16 * 1024 * 1024 * 1024L, false))
             {
-                // XTrace.Log.Info("文件大小：{0:n0}GB", size);
                 XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
                 XTrace.Log.Info("准备插入：{0:n0}", count);
                 qu.View.GetView(0, (qu.Count + count) * 16);
+
+                var sw = Stopwatch.StartNew();
                 for (var i = 0L; i < count; i++)
                 {
                     qu.Enqueue(new Block(i * 16, 998));
                 }
+                //Parallel.For(0, count, i =>
+                //{
+                //    qu.Enqueue(new Block(i * 16, 998));
+                //});
+                sw.Stop();
+                var ms = sw.ElapsedMilliseconds;
+                Console.WriteLine("入队[{0:n0}] {1:n0}tps", count, count * 1000L / ms);
                 XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
-                Console.WriteLine(qu.Peek());
 
+                sw.Restart();
+                //Console.WriteLine(qu.Peek());
+                for (var i = 0L; i < count; i++)
+                {
+                    qu.Dequeue();
+                }
+                sw.Stop();
                 ms = sw.ElapsedMilliseconds;
-                XTrace.Log.Info("写入速度 {0:n0}ops", count * 1000L / ms);
+                Console.WriteLine("出队[{0:n0}] {1:n0}tps", count, count * 1000L / ms);
+                XTrace.Log.Info("队列总数：{0:n0}", qu.Count);
             }
-            XTrace.Log.Info("耗时：{0:n0}ms 整体速度 {1:n0}ops", ms, count * 1000L / ms);
         }
 
         static void Test5()

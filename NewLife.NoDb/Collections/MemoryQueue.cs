@@ -30,7 +30,7 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 构造
-        static MemoryQueue() { _HeadSize = 24; }
+        static MemoryQueue() => _HeadSize = 24;
 
         /// <summary>实例化一个内存队列</summary>
         /// <param name="mf">内存文件</param>
@@ -48,7 +48,7 @@ namespace NewLife.NoDb.Collections
 
         #region 基本方法
         /// <summary>元素个数</summary>
-        Int32 IReadOnlyCollection<T>.Count => (Int32)Count;
+        Int32 IReadOnlyCollection<T>.Count => Count;
 
         /// <summary>获取栈顶</summary>
         /// <returns></returns>
@@ -67,15 +67,25 @@ namespace NewLife.NoDb.Collections
         /// <returns></returns>
         public T Dequeue()
         {
-            var n = Count;
-            if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count));
-            Interlocked.Decrement(ref _Count);
+            var n = 0;
+            do
+            {
+                n = Count;
+                if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count));
+            }
+            while (Interlocked.CompareExchange(ref _Count, n - 1, n) != n);
 
-            var p = ReadPosition;
+            // 抢位置
+            var p = 0;
+            var p2 = 0;
+            do
+            {
+                p = _ReadPosition;
+                p2 = p + 1;
+                if (p2 >= Capacity) p2 -= Capacity;
+            } while (Interlocked.CompareExchange(ref _ReadPosition, p2, p) != p);
+
             View.Read<T>(GetP(p), out var val);
-
-            if (++p >= Capacity) p = 0;
-            _ReadPosition = p;
 
             // 定时保存
             Commit();
@@ -87,15 +97,25 @@ namespace NewLife.NoDb.Collections
         /// <param name="item"></param>
         public void Enqueue(T item)
         {
-            var n = Count;
-            if (n + 1 >= Capacity) throw new InvalidOperationException("容量不足");
-            Interlocked.Increment(ref _Count);
+            var n = 0;
+            do
+            {
+                n = Count;
+                if (n >= Capacity) throw new InvalidOperationException("容量不足");
+            }
+            while (Interlocked.CompareExchange(ref _Count, n + 1, n) != n);
 
-            var p = WritePosition;
+            // 抢位置
+            var p = 0;
+            var p2 = 0;
+            do
+            {
+                p = _WritePosition;
+                p2 = p + 1;
+                if (p2 >= Capacity) p2 -= Capacity;
+            } while (Interlocked.CompareExchange(ref _WritePosition, p2, p) != p);
+
             View.Write(GetP(p), ref item, _ItemSize);
-
-            if (++p >= Capacity) p = 0;
-            _WritePosition = p;
 
             // 定时保存
             Commit();

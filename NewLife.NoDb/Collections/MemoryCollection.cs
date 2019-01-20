@@ -105,7 +105,7 @@ namespace NewLife.NoDb.Collections
 
             if (n > array.Length) n = array.Length;
 
-            View.ReadArray(GetP(0), array, arrayIndex, (Int32)n);
+            View.ReadArray(GetP(0), array, arrayIndex, n);
         }
 
         /// <summary>枚举数</summary>
@@ -124,7 +124,7 @@ namespace NewLife.NoDb.Collections
         #endregion
 
         #region 定时保存
-        /// <summary>定时保存数据的周期</summary>
+        /// <summary>定时保存数据的周期。默认1000ms</summary>
         public Int32 Period { get; set; } = 1000;
 
         /// <summary>修改完以后需要提交</summary>
@@ -145,7 +145,7 @@ namespace NewLife.NoDb.Collections
 
                 var p = Period;
                 if (p < 100) p = 100;
-                _Timer = new TimerX(DoSave, null, p, p) { Async = true };
+                _Timer = new TimerX(DoSave, null, p, p, "NoDb") { Async = true };
             }
         }
 
