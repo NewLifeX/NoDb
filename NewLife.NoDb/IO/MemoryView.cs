@@ -131,6 +131,9 @@ namespace NewLife.NoDb.IO
 
             return File.Map.CreateViewStream(Offset, Size);
         }
+
+        /// <summary>清除此视图的所有缓冲区并导致所有缓冲的数据写入到基础文件</summary>
+        public void Flush() => _view?.Flush();
         #endregion
 
         #region 读写
@@ -264,10 +267,7 @@ namespace NewLife.NoDb.IO
 
         #region 辅助
         private static ConcurrentDictionary<Type, Int32> _sizeCache = new ConcurrentDictionary<Type, Int32>();
-        private static Int32 SizeOf<T>()
-        {
-            return _sizeCache.GetOrAdd(typeof(T), t => Marshal.SizeOf(t));
-        }
+        private static Int32 SizeOf<T>() => _sizeCache.GetOrAdd(typeof(T), t => Marshal.SizeOf(t));
         #endregion
     }
 }

@@ -159,6 +159,8 @@ namespace NewLife.NoDb.Collections
                 lock (View.SyncRoot)
                 {
                     OnSave();
+
+                    Flush();
                 }
 
                 Interlocked.Add(ref _version, -v);
@@ -177,6 +179,9 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>定时保存数据到文件</summary>
         protected virtual void OnSave() { }
+
+        /// <summary>清除此视图的所有缓冲区并导致所有缓冲的数据写入到基础文件</summary>
+        public void Flush() => View.Flush();
         #endregion
 
         #region 辅助
