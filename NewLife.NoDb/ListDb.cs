@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NewLife.NoDb.Collections;
+using System.Threading;
 using NewLife.NoDb.IO;
 using NewLife.NoDb.Storage;
+using NewLife.Threading;
 
 namespace NewLife.NoDb
 {
@@ -16,45 +17,41 @@ namespace NewLife.NoDb
         #region 属性
         /// <summary>幻数</summary>
         public const String Magic = "ListDb";
+        const Int32 HEADER_SIZE = 1024;
 
         /// <summary>映射文件</summary>
         public MemoryFile File { get; }
 
         /// <summary>版本</summary>
-        public Int16 Version { get; private set; } = 1;
+        public Byte Version { get; private set; } = 1;
 
-        /// <summary>顺序整数构成的索引</summary>
-        public MemoryArray<Int64> Index { get; private set; }
+        /// <summary>数据槽，记录每个数据块的位置</summary>
+        /// <remarks>为了性能，初始化时直接把数据槽载入托管内存</remarks>
+        public IList<Block> Slots { get; private set; }
 
         /// <summary>元素个数</summary>
-        public Int32 Count { get; private set; }
+        public Int32 Count => Slots == null ? 0 : Slots.Count;
 
         /// <summary>数据区</summary>
-        public Heap Heap { get; private set; }
+        private Heap Heap { get; set; }
 
         /// <summary>访问器</summary>
         private MemoryView View { get; }
+
+        private Block _SlotData;
         #endregion
 
         #region 构造
         /// <summary>实例化数据库</summary>
         /// <param name="file">文件</param>
-        /// <param name="count">列表个数。默认0表示只读，否则从文件读取个数</param>
-        public ListDb(String file, Int32 count = 0)
+        public ListDb(String file)
         {
             File = new MemoryFile(file);
+            Heap = new Heap(File, HEADER_SIZE, 2L * 1024 * 1024 * 1024);
+            View = Heap.View;
 
             // 加载
-            if (!Read())
-            {
-                if (count == 0) throw new InvalidOperationException("无效数据库！");
-
-                Write(count);
-            }
-
-            //Index = new MemoryArray<Int32>(count, File);
-            //View = File.CreateView(DataOffset);
-            View = Heap.View;
+            Read();
         }
 
         /// <summary>销毁</summary>
@@ -63,8 +60,12 @@ namespace NewLife.NoDb
         {
             base.OnDispose(disposing);
 
+            _timer.TryDispose();
+
+            if (_version > 0) Commit();
+
             Heap.TryDispose();
-            Index.TryDispose();
+            Slots.TryDispose();
             View.TryDispose();
             File.TryDispose();
         }
@@ -73,102 +74,125 @@ namespace NewLife.NoDb
         #region 读写
         private Boolean Read()
         {
-            using (var vw = File.CreateView(0, 1024))
+            using (var vw = File.CreateView(0, HEADER_SIZE))
             {
                 var ms = vw.GetStream(0, 64);
                 var reader = new BinaryReader(ms);
 
-                var magic = reader.ReadBytes(6).ToStr();
+                // 幻数
+                var magic = reader.ReadBytes(Magic.Length).ToStr();
                 if (Magic != magic) return false;
 
                 // 版本
-                Version = reader.ReadInt16();
+                Version = reader.ReadByte();
+
+                // 标记
+                var flag = reader.ReadByte();
 
                 // 索引器位置和个数
-                var offset = reader.ReadInt32();
-                var size = reader.ReadInt32();
-                Count = size / sizeof(Int64);
+                var blk = new Block
+                {
+                    Position = reader.ReadInt32(),
+                    Size = reader.ReadInt32(),
+                };
+                _SlotData = blk;
 
-                Index = new MemoryArray<Int64>(File, Count, offset);
+                // 加载数据槽进入托管内存，以加快查找速度
+                var ss = new List<Block>();
+                ms = Heap.View.GetStream(blk.Position, blk.Size);
+                reader = new BinaryReader(ms);
+                var n = blk.Size / sizeof(Int64);
+                for (var i = 0; i < n; i++)
+                {
+                    ss.Add(new Block
+                    {
+                        Position = reader.ReadInt32(),
+                        Size = reader.ReadInt32(),
+                    });
+                }
 
-                // 数据区
-                offset = reader.ReadInt32();
-                Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
+                Slots = ss;
             }
 
             return true;
         }
 
-        private void Write(Int32 count)
+        private void Write()
         {
-            using (var vw = File.CreateView(0, 1024))
+            using (var vw = File.CreateView(0, HEADER_SIZE))
             {
                 var ms = vw.GetStream(0, 64);
                 var writer = new BinaryWriter(ms);
 
+                // 幻数
                 writer.Write(Magic.GetBytes());
 
                 // 版本
                 writer.Write(Version);
 
-                // 索引器
-                var offset = 64;
-                var size = count * sizeof(Int64);
-                if (Index != null)
+                // 标记
+                Byte flag = 0;
+                writer.Write(flag);
+
+                // 如果有数据，则需要写入
+                var ss = Slots;
+                var n = ss == null ? 0 : ss.Count;
+                var len = n * sizeof(Int64);
+
+                // 大小不同时，需要重新分配
+                var blk = _SlotData;
+                if (blk.Size != len)
                 {
-                    offset = (Int32)Index.View.Offset;
-                    size = (Int32)Index.View.Size;
+                    if (blk.Size > 0) Heap.Free(blk);
+                    blk = _SlotData = Heap.Alloc(len);
                 }
-                else
-                    Index = new MemoryArray<Int64>(File, count, offset);
 
-                // 索引区全部置空
-                Index.Clear();
-                Index.View.Flush();
+                writer.Write(blk.Position);
+                writer.Write(blk.Size);
 
-                writer.Write(offset);
-                writer.Write(size);
-
-                // 数据区
-                size += 32;
-                offset = 0;
-                while (offset < size) offset += 1024;
-                if (Heap != null)
-                    offset = (Int32)Heap.Position;
-                else
-                    Heap = new Heap(File, offset, 2L * 1024 * 1024 * 1024);
-                writer.Write(offset);
-
-                Count = count;
+                // 写入数据槽
+                if (n > 0)
+                {
+                    ms = Heap.View.GetStream(blk.Position, blk.Size);
+                    writer = new BinaryWriter(ms);
+                    for (var i = 0; i < n; i++)
+                    {
+                        writer.Write(ss[i].Position);
+                        writer.Write(ss[i].Size);
+                    }
+                }
             }
         }
-        #endregion
 
-        #region 索引器
-        /// <summary>获取 或 设置 指定键关联的值</summary>
-        /// <param name="idx"></param>
-        /// <returns></returns>
-        public Block this[Int32 idx]
+        /// <summary>提交修改</summary>
+        public void Commit()
         {
-            get
+            var n = _version;
+
+            Write();
+
+            Interlocked.Add(ref _version, -n);
+        }
+
+        private TimerX _timer;
+        private Int32 _version;
+        private void SetChange()
+        {
+            Interlocked.Increment(ref _version);
+
+            if (_timer == null)
             {
-                if (idx < 0 || idx >= Count) throw new KeyNotFoundException();
-
-                var n = Index[idx];
-                var bk = new Block(n >> 32, n & 0xFFFF_FFFF);
-                //Console.WriteLine($"[{idx}]=[{bk.Position}, {bk.Size}]");
-
-                return bk;
-            }
-            set
-            {
-                if (idx < 0 || idx >= Count) throw new KeyNotFoundException();
-                if (value.Position > 0xFFFF_FFFF || value.Size > 0xFFFF_FFFF) throw new ArgumentOutOfRangeException();
-
-                //ref var bk = ref value;
-
-                var n = (value.Position << 32) + value.Size;
-                Index[idx] = n;
+                lock (this)
+                {
+                    if (_timer == null)
+                    {
+                        _timer = new TimerX(s => Commit(), null, 10_000, 10_000, "NoDb")
+                        {
+                            CanExecute = () => _version > 0,
+                            Async = true,
+                        };
+                    }
+                }
             }
         }
         #endregion
@@ -179,10 +203,29 @@ namespace NewLife.NoDb
         /// <returns></returns>
         public Byte[] Get(Int32 idx)
         {
-            var bk = this[idx];
+            var ss = Slots;
+            if (ss == null || idx < 0 || idx >= ss.Count) throw new ArgumentOutOfRangeException(nameof(idx));
+
+            var bk = ss[idx];
             if (bk.Position == 0 || bk.Size == 0) return null;
 
             return View.ReadBytes(bk.Position, (Int32)bk.Size);
+        }
+
+        public Int32 Add(Byte[] value)
+        {
+            var ss = Slots;
+            if (ss == null) ss = Slots = new List<Block>(1024);
+
+            var n = ss.Count;
+            var bk = Heap.Alloc(value.Length);
+            ss.Add(bk);
+
+            View.WriteBytes(View.Offset + bk.Position, value);
+
+            SetChange();
+
+            return n;
         }
 
         /// <summary>设置 数据</summary>
@@ -190,13 +233,16 @@ namespace NewLife.NoDb
         /// <param name="value"></param>
         public void Set(Int32 idx, Byte[] value)
         {
-            var bk = this[idx];
+            var ss = Slots;
+            if (ss == null || idx < 0 || idx >= ss.Count) throw new ArgumentOutOfRangeException(nameof(idx));
+
+            var bk = ss[idx];
             if (bk.Position == 0 || bk.Size == 0) bk = Heap.Alloc(value.Length);
 
             // View内部竟然没有叠加偏移量
             View.WriteBytes(View.Offset + bk.Position, value);
 
-            this[idx] = bk;
+            ss[idx] = bk;
         }
         #endregion
     }

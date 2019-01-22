@@ -19,12 +19,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                TestQueue();
+                Test5();
             else
             {
                 try
                 {
-                    TestQueue();
+                    Test5();
                 }
                 catch (Exception ex)
                 {
@@ -211,15 +211,16 @@ namespace Test
             var count = 24 * 3600;
             //count = 13;
             var buf = "01234567890ABCD".GetBytes();
-            using (var db = new ListDb("List.db", count))
+            using (var db = new ListDb("List.db"))
             {
                 //count = 1;
                 for (var i = 0; i < count; i++)
                 {
                     //var bk = db[i];
                     //Console.WriteLine(bk);
-                    db.Set(i, buf);
+                    //db.Set(i, buf);
                     //db.Set(i, Rand.NextString(15).GetBytes());
+                    db.Add(buf);
                 }
             }
         }
