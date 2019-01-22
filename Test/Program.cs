@@ -19,12 +19,12 @@ namespace Test
             XTrace.UseConsole();
 
             if (Debugger.IsAttached)
-                Test5();
+                TestQueue();
             else
             {
                 try
                 {
-                    Test5();
+                    TestQueue();
                 }
                 catch (Exception ex)
                 {

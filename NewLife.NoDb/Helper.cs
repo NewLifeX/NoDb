@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using NewLife.NoDb.Storage;
 
 namespace NewLife.NoDb
@@ -26,7 +23,11 @@ namespace NewLife.NoDb
             // 使用文件流可以控制共享读写，让别的进程也可以读写文件
             var fs = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
             if (fs.Length == 0) fs.SetLength(1024);
+#if __CORE__
+            var _mmf = MemoryMappedFile.CreateFromFile(fs, name, 0, MemoryMappedFileAccess.ReadWrite, HandleInheritability.None, false);
+#else
             var _mmf = MemoryMappedFile.CreateFromFile(fs, name, 0, MemoryMappedFileAccess.ReadWrite, null, HandleInheritability.None, false);
+#endif
 
             return _mmf;
         }
@@ -72,22 +73,22 @@ namespace NewLife.NoDb
             return Block.Null;
         }
 
-        /// <summary></summary>
-        /// <param name="mmf"></param>
-        public static void CheckAccessControl(this MemoryMappedFile mmf)
-        {
-            var user = $"{Environment.MachineName}\\{Environment.UserName}";
-            var rule = new AccessRule<MemoryMappedFileRights>(user, MemoryMappedFileRights.FullControl, AccessControlType.Allow);
+        ///// <summary></summary>
+        ///// <param name="mmf"></param>
+        //public static void CheckAccessControl(this MemoryMappedFile mmf)
+        //{
+        //    var user = $"{Environment.MachineName}\\{Environment.UserName}";
+        //    var rule = new AccessRule<MemoryMappedFileRights>(user, MemoryMappedFileRights.FullControl, AccessControlType.Allow);
 
-            var msc = mmf.GetAccessControl();
-            foreach (AccessRule<MemoryMappedFileRights> ar in msc.GetAccessRules(true, true, typeof(NTAccount)))
-            {
-                if (ar.IdentityReference == rule.IdentityReference && ar.AccessControlType == rule.AccessControlType && ar.Rights == rule.Rights) return;
-            }
+        //    var msc = mmf.GetAccessControl();
+        //    foreach (AccessRule<MemoryMappedFileRights> ar in msc.GetAccessRules(true, true, typeof(NTAccount)))
+        //    {
+        //        if (ar.IdentityReference == rule.IdentityReference && ar.AccessControlType == rule.AccessControlType && ar.Rights == rule.Rights) return;
+        //    }
 
-            msc.AddAccessRule(rule);
-            mmf.SetAccessControl(msc);
-        }
+        //    msc.AddAccessRule(rule);
+        //    mmf.SetAccessControl(msc);
+        //}
 
         //public static unsafe Byte[] ReadBytes(this MemoryMappedViewAccessor view, Int64 offset, Int32 num)
         //{
