@@ -70,7 +70,7 @@ namespace NewLife.NoDb
             }
 
             // 加大步进增长率，减少映射次数，提升性能
-            View.StepRate = 100;
+            //View.StepRate = 100;
 
             // 加载
             if (init) Init();
