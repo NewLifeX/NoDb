@@ -49,7 +49,7 @@ namespace NewLife.NoDb.Storage
         #region 构造
         /// <summary>内存块</summary>
         /// <returns></returns>
-        public override String ToString() => $"({Position:X8}, {Size:X8})[{Free}, {PrevFree}]";
+        public override String ToString() => $"({Position:X8}, {Size:X8})[{(Free ? nameof(Free) : "")} {(PrevFree ? nameof(PrevFree) : "")}]";
         #endregion
 
         #region 方法
@@ -78,7 +78,7 @@ namespace NewLife.NoDb.Storage
                 Next = 0;
 
 #if DEBUG
-            XTrace.WriteLine("Read " + this);
+            XTrace.WriteLine("Read  " + this);
 #endif
 
             return true;
@@ -92,7 +92,7 @@ namespace NewLife.NoDb.Storage
             if (p < 0) throw new ArgumentNullException(nameof(Position));
 
 #if DEBUG
-            XTrace.WriteLine("Write " + this);
+            //XTrace.WriteLine("Write " + this);
 #endif
 
             // 8字节对齐

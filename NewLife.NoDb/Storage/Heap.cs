@@ -39,7 +39,7 @@ namespace NewLife.NoDb.Storage
         /// <param name="mf"></param>
         /// <param name="offset"></param>
         /// <param name="size"></param>
-        /// <param name="init">自动初始化加载堆</param>
+        /// <param name="init">自动初始化</param>
         public Heap(MemoryFile mf, Int64 offset = 0, Int64 size = 0, Boolean init = true)
         {
             if (mf == null) throw new ArgumentNullException(nameof(mf));
@@ -75,7 +75,7 @@ namespace NewLife.NoDb.Storage
             var mb = _Free;
             if (mb == null) return vw + "";
 
-            return $"[{vw.File}]({vw.Offset}, {vw.Capacity}) Free=[{mb.Position:n0}, {mb.Size:n0}]";
+            return $"[{vw.File}]({vw.Offset:X8}, {vw.Capacity:X8}) Count={Count:n0} Used={Used:n0} Free=[{mb.Position:X8}, {mb.Size:X8}]";
         }
         #endregion
 
@@ -112,7 +112,7 @@ namespace NewLife.NoDb.Storage
             _Used = 0;
             _Free = mb;
 
-            WriteLog("初始化堆 {0}", this);
+            WriteLog("初始化 {0}", this);
 
             mb.Write(vw);
             Save();

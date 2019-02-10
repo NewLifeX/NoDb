@@ -211,8 +211,13 @@ namespace Test
             var count = 24 * 3600;
             //count = 13;
             var buf = "01234567890ABCD".GetBytes();
-            using (var db = new ListDb("List.db"))
+            using (var db = new ListDb("List.db", false, false))
             {
+#if DEBUG
+                db.Log = XTrace.Log;
+#endif
+                db.Init();
+
                 //count = 1;
                 for (var i = 0; i < count; i++)
                 {

@@ -108,8 +108,9 @@ namespace NewLife.NoDb.IO
                 // 容量检查
                 if (Size < offset + size || Capacity > 0 && Size > Capacity) throw new ArgumentOutOfRangeException(nameof(Size));
 
-                // 销毁旧的
-                _view.TryDispose();
+                //// 销毁旧的
+                //_view.TryDispose();
+                var old = _view;
 
                 // 映射文件扩容
                 File.CheckCapacity(Offset + Size);
@@ -118,6 +119,9 @@ namespace NewLife.NoDb.IO
 
                 // 版本必须一致，如果内存文件扩容后版本改变，这里也要重新生成视图
                 _Version = File.Version;
+
+                // 销毁旧的
+                old.TryDispose();
 
                 return _view;
             }
