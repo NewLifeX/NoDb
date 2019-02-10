@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;
@@ -211,7 +210,6 @@ namespace Test
         {
             var count = 24 * 3600L;
             count *= 100;
-            //count = 13;
             var buf = "01234567890ABCD".GetBytes();
             using (var db = new ListDb("List.db", false, false))
             {
@@ -219,13 +217,8 @@ namespace Test
                 db.Init();
 
                 var sw = Stopwatch.StartNew();
-                //count = 1;
                 for (var i = 0; i < count; i++)
                 {
-                    //var bk = db[i];
-                    //Console.WriteLine(bk);
-                    //db.Set(i, buf);
-                    //db.Set(i, Rand.NextString(15).GetBytes());
                     db.Add(buf);
                 }
                 sw.Stop();
@@ -236,12 +229,13 @@ namespace Test
             count *= 10;
             using (var db = new ListDb("List.db", true))
             {
-                var total = db.Count;
+                var list = db.ToList();
+                var total = list.Count;
 
                 var sw = Stopwatch.StartNew();
                 for (var i = 0; i < count; i++)
                 {
-                    buf = db.Get(i % total);
+                    buf = list[i % total];
                 }
                 sw.Stop();
                 var ms = sw.Elapsed.TotalMilliseconds;

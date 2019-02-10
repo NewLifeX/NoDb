@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -251,21 +252,41 @@ namespace NewLife.NoDb
         }
         #endregion
 
-        #region 取值 / 设置
+        #region 基础方法
         /// <summary>获取 数据</summary>
-        /// <param name="idx"></param>
+        /// <param name="index"></param>
         /// <returns></returns>
-        public Byte[] Get(Int32 idx)
+        public Byte[] Get(Int32 index)
         {
             var ss = Slots;
-            if (ss == null || idx < 0 || idx >= ss.Count) throw new ArgumentOutOfRangeException(nameof(idx));
+            if (ss == null || index < 0 || index >= ss.Count) throw new ArgumentOutOfRangeException(nameof(index));
 
-            var bk = ss[idx];
+            var bk = ss[index];
             if (bk.Position == 0 || bk.Size == 0) return null;
 
             return View.ReadBytes(bk.Position, (Int32)bk.Size);
         }
 
+        /// <summary>设置 数据</summary>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
+        public void Set(Int32 index, Byte[] value)
+        {
+            var ss = Slots;
+            if (ss == null || index < 0 || index >= ss.Count) throw new ArgumentOutOfRangeException(nameof(index));
+
+            var bk = ss[index];
+            if (bk.Position == 0 || bk.Size == 0) bk = Heap.Alloc(value.Length);
+
+            // View内部竟然没有叠加偏移量
+            View.WriteBytes(View.Offset + bk.Position, value);
+
+            ss[index] = bk;
+        }
+
+        /// <summary>向列表默认添加项</summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public Int32 Add(Byte[] value)
         {
             var ss = Slots;
@@ -282,21 +303,92 @@ namespace NewLife.NoDb
             return n;
         }
 
-        /// <summary>设置 数据</summary>
-        /// <param name="idx"></param>
-        /// <param name="value"></param>
-        public void Set(Int32 idx, Byte[] value)
+        /// <summary>指定位置插入</summary>
+        /// <param name="index"></param>
+        /// <param name="item"></param>
+        public void Insert(Int32 index, Byte[] item)
         {
             var ss = Slots;
-            if (ss == null || idx < 0 || idx >= ss.Count) throw new ArgumentOutOfRangeException(nameof(idx));
+            if (ss == null || index < 0 || index >= ss.Count) throw new ArgumentOutOfRangeException(nameof(index));
 
-            var bk = ss[idx];
-            if (bk.Position == 0 || bk.Size == 0) bk = Heap.Alloc(value.Length);
+            var bk = Heap.Alloc(item.Length);
+            ss.Insert(index, bk);
 
-            // View内部竟然没有叠加偏移量
-            View.WriteBytes(View.Offset + bk.Position, value);
+            View.WriteBytes(View.Offset + bk.Position, item);
 
-            ss[idx] = bk;
+            SetChange();
+        }
+
+        /// <summary>删除指定位置</summary>
+        /// <param name="index"></param>
+        public void RemoveAt(Int32 index)
+        {
+            var ss = Slots;
+            if (ss == null || index < 0 || index >= ss.Count) throw new ArgumentOutOfRangeException(nameof(index));
+
+            var bk = ss[index];
+            ss.RemoveAt(index);
+
+            if (bk.Position > 0 && bk.Size > 0) Heap.Free(bk);
+        }
+
+        /// <summary>清空列表库</summary>
+        public void Clear()
+        {
+            var ss = Slots;
+            if (ss == null || ss.Count == 0) return;
+
+            var arr = ss.ToArray();
+            ss.Clear();
+
+            // 释放空间
+            foreach (var bk in arr)
+            {
+                if (bk.Position > 0 && bk.Size > 0) Heap.Free(bk);
+            }
+        }
+        #endregion
+
+        #region 转列表
+        /// <summary>转为列表操作</summary>
+        /// <returns></returns>
+        public IList<Byte[]> ToList() => new DbList { Db = this };
+
+        class DbList : IList<Byte[]>
+        {
+            public ListDb Db { get; set; }
+
+            public Byte[] this[Int32 index] { get => Db.Get(index); set => Db.Set(index, value); }
+
+            public Int32 Count => Db.Count;
+
+            public Boolean IsReadOnly => Db.ReadOnly;
+
+            public void Add(Byte[] item) => Db.Add(item);
+
+            public void Clear() => Db.Clear();
+
+            public Boolean Contains(Byte[] item) => throw new NotSupportedException();
+
+            public void CopyTo(Byte[][] array, Int32 arrayIndex) => throw new NotSupportedException();
+
+            public Int32 IndexOf(Byte[] item) => throw new NotSupportedException();
+
+            public void Insert(Int32 index, Byte[] item) => Db.Insert(index, item);
+
+            public Boolean Remove(Byte[] item) => throw new NotSupportedException();
+
+            public void RemoveAt(Int32 index) => Db.RemoveAt(index);
+
+            public IEnumerator<Byte[]> GetEnumerator()
+            {
+                for (var i = 0; i < Db.Slots.Count; i++)
+                {
+                    yield return this[i];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
         #endregion
 
