@@ -90,7 +90,7 @@ namespace NewLife.NoDb.IO
             {
                 if (capacity <= Capacity) return false;
 
-                WriteLog("扩容到 {0:n0}", capacity);
+                //WriteLog("扩容到 {0:n0}", capacity);
 
                 // 先销毁旧的
                 Map.TryDispose();

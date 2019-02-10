@@ -102,8 +102,12 @@ namespace NewLife.NoDb
         /// <summary>初始化。初始化之后才能使用</summary>
         public void Init()
         {
-            Heap.Log = Log;
-            Heap.Init();
+            var hp = Heap;
+            if (hp != null)
+            {
+                Heap.Log = Log;
+                Heap.Init();
+            }
 
             // 读取配置
             Read();
@@ -212,9 +216,13 @@ namespace NewLife.NoDb
         {
             var n = _version;
 
-            Write();
+            try
+            {
+                Write();
 
-            Interlocked.Add(ref _version, -n);
+                Interlocked.Add(ref _version, -n);
+            }
+            catch (ObjectDisposedException) { }
         }
 
         private TimerX _timer;

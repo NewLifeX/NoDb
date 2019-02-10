@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;
@@ -208,16 +209,16 @@ namespace Test
 
         static void Test5()
         {
-            var count = 24 * 3600;
+            var count = 24 * 3600L;
+            count *= 10;
             //count = 13;
             var buf = "01234567890ABCD".GetBytes();
             using (var db = new ListDb("List.db", false, false))
             {
-#if DEBUG
                 db.Log = XTrace.Log;
-#endif
                 db.Init();
 
+                var sw = Stopwatch.StartNew();
                 //count = 1;
                 for (var i = 0; i < count; i++)
                 {
@@ -227,6 +228,24 @@ namespace Test
                     //db.Set(i, Rand.NextString(15).GetBytes());
                     db.Add(buf);
                 }
+                sw.Stop();
+                var ms = sw.Elapsed.TotalMilliseconds;
+                XTrace.WriteLine("写入{0:n0}，耗时{1:n0}ms，速度 {2:n0}tps", count, ms, count * 1000 / ms);
+            }
+
+            count *= 100;
+            using (var db = new ListDb("List.db", true))
+            {
+                var total = db.Count;
+
+                var sw = Stopwatch.StartNew();
+                for (var i = 0; i < count; i++)
+                {
+                    buf = db.Get(i % total);
+                }
+                sw.Stop();
+                var ms = sw.Elapsed.TotalMilliseconds;
+                XTrace.WriteLine("读取{0:n0}，耗时{1:n0}ms，速度 {2:n0}rps", count, ms, count * 1000 / ms);
             }
         }
     }
