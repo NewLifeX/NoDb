@@ -202,7 +202,6 @@ namespace NewLife.NoDb
                 // 写入数据槽
                 if (n > 0)
                 {
-                    //ms = Heap.View.GetStream(blk.Position, blk.Size);
                     ms = new MemoryStream();
                     writer = new BinaryWriter(ms);
                     for (var i = 0; i < n; i++)
@@ -280,7 +279,7 @@ namespace NewLife.NoDb
             if (bk.Position == 0 || bk.Size == 0) bk = Heap.Alloc(value.Length);
 
             // View内部竟然没有叠加偏移量
-            View.WriteBytes(View.Offset + bk.Position, value);
+            View.WriteBytes(bk.Position, value);
 
             ss[index] = bk;
         }
@@ -297,7 +296,7 @@ namespace NewLife.NoDb
             var bk = Heap.Alloc(value.Length);
             ss.Add(bk);
 
-            View.WriteBytes(View.Offset + bk.Position, value);
+            View.WriteBytes(bk.Position, value);
 
             SetChange();
 
@@ -315,7 +314,7 @@ namespace NewLife.NoDb
             var bk = Heap.Alloc(item.Length);
             ss.Insert(index, bk);
 
-            View.WriteBytes(View.Offset + bk.Position, item);
+            View.WriteBytes(bk.Position, item);
 
             SetChange();
         }
@@ -330,6 +329,8 @@ namespace NewLife.NoDb
             var bk = ss[index];
             ss.RemoveAt(index);
 
+            SetChange();
+
             if (bk.Position > 0 && bk.Size > 0) Heap.Free(bk);
         }
 
@@ -341,6 +342,8 @@ namespace NewLife.NoDb
 
             var arr = ss.ToArray();
             ss.Clear();
+
+            SetChange();
 
             // 释放空间
             foreach (var bk in arr)

@@ -262,7 +262,9 @@ namespace NewLife.NoDb.Storage
 
                 SetChange();
 
-                return rs.GetData();
+                //return rs.GetData();
+                // 返回时只需要申请者的长度
+                return new Block { Position = rs.Position + 8, Size = size };
             }
         }
 

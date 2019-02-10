@@ -244,7 +244,7 @@ namespace NewLife.NoDb.IO
             try
             {
                 var p = new IntPtr(ptr);
-                p = new IntPtr(p.ToInt64() + position);
+                p = new IntPtr(p.ToInt64() + Offset + position);
                 var arr = new Byte[count];
                 Marshal.Copy(p, arr, 0, count);
                 return arr;
@@ -267,7 +267,7 @@ namespace NewLife.NoDb.IO
             try
             {
                 var p = new IntPtr(ptr);
-                p = new IntPtr(p.ToInt64() + position);
+                p = new IntPtr(p.ToInt64() + Offset + position);
                 Marshal.Copy(data, 0, p, data.Length);
             }
             finally

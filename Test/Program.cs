@@ -210,7 +210,8 @@ namespace Test
         {
             var count = 24 * 3600L;
             count *= 100;
-            var buf = "01234567890ABCD".GetBytes();
+            var code = "01234567890ABCD";
+            var buf = code.GetBytes();
             using (var db = new ListDb("List.db", false, false))
             {
                 db.Log = XTrace.Log;
@@ -226,7 +227,7 @@ namespace Test
                 XTrace.WriteLine("写入{0:n0}，耗时{1:n0}ms，速度 {2:n0}tps", count, ms, count * 1000 / ms);
             }
 
-            count *= 10;
+            //count *= 10;
             using (var db = new ListDb("List.db", true))
             {
                 var list = db.ToList();
@@ -236,6 +237,7 @@ namespace Test
                 for (var i = 0; i < count; i++)
                 {
                     buf = list[i % total];
+                    //Debug.Assert(buf.ToStr() == code);
                 }
                 sw.Stop();
                 var ms = sw.Elapsed.TotalMilliseconds;
