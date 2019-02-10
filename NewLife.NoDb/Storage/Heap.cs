@@ -239,7 +239,7 @@ namespace NewLife.NoDb.Storage
                 else
                 {
                     // 前一块Next指向新切割出来的空闲块
-                    SetNextOfPrev(prev, mb);
+                    if (prev != null && prev != mb) SetNextOfPrev(prev, mb);
 
                     mb.Write(vw);
                 }
