@@ -228,8 +228,11 @@ namespace Test
             }
 
             //count *= 10;
-            using (var db = new ListDb("List.db", true))
+            using (var db = new ListDb("List.db", true, false))
             {
+                db.Log = XTrace.Log;
+                db.Init();
+
                 var list = db.ToList();
                 var total = list.Count;
 

@@ -91,7 +91,7 @@ namespace NewLife.NoDb.Storage
 
         /// <summary>字符串</summary>
         /// <returns></returns>
-        public override String ToString() => String.Format("({0}, {1})", Position, Size);
+        public override String ToString() => $"({Position:n0}, {Size:n0})";
 
         /// <summary>等于</summary>
         /// <param name="block1"></param>

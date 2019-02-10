@@ -64,6 +64,8 @@ namespace NewLife.NoDb.Storage
             _timer.TryDispose();
             _timer = null;
 
+            WriteLog("保存堆 {0}", this);
+
             View.TryDispose();
         }
 
@@ -351,6 +353,11 @@ namespace NewLife.NoDb.Storage
 
                 // 修改下一个相邻块的PrevFree
                 var next = new MemoryBlock { Position = mb.Position + mb.Size };
+                if (next.Read(vw) && !next.PrevFree)
+                {
+                    next.PrevFree = true;
+                    next.Write(vw);
+                }
 
                 mb.Write(vw);
 

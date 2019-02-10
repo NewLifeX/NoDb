@@ -49,7 +49,7 @@ namespace NewLife.NoDb.Storage
         #region 构造
         /// <summary>内存块</summary>
         /// <returns></returns>
-        public override String ToString() => $"({Position:X8}, {Size:X8})[{(Free ? nameof(Free) : "")} {(PrevFree ? nameof(PrevFree) : "")}]";
+        public override String ToString() => $"({Position:n0}, {Size:n0})[{(Free ? nameof(Free) : "")} {(PrevFree ? nameof(PrevFree) : "")}]";
         #endregion
 
         #region 方法
