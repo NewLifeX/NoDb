@@ -173,9 +173,13 @@ namespace NewLife.NoDb.Storage
             var mts = _commits;
             if (mts == 0) return;
 
-            Interlocked.Add(ref _commits, -mts);
+            try
+            {
+                Save();
 
-            Save();
+                Interlocked.Add(ref _commits, -mts);
+            }
+            catch (ObjectDisposedException) { }
         }
 
         private TimerX _timer;
@@ -187,8 +191,14 @@ namespace NewLife.NoDb.Storage
             {
                 lock (this)
                 {
-                    // 定时提交
-                    if (_timer == null) _timer = new TimerX(s => Commit(), null, 0, 1_000, "NoDb") { Async = true };
+                    if (_timer == null)
+                    {
+                        _timer = new TimerX(s => Commit(), null, 0, 1_000, "NoDb")
+                        {
+                            CanExecute = () => _commits > 0,
+                            Async = true,
+                        };
+                    }
                 }
             }
         }
@@ -401,8 +411,6 @@ namespace NewLife.NoDb.Storage
 
             return len;
         }
-
-        //private MemoryBlock FindFree()
 
         /// <summary>日志</summary>
         public ILog Log { get; set; }

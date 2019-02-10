@@ -84,7 +84,7 @@ namespace NewLife.NoDb
 
             _timer.TryDispose();
 
-            if (_version > 0) Commit();
+            if (_commits > 0) Commit();
 
             Heap.TryDispose();
             Slots.TryDispose();
@@ -215,25 +215,26 @@ namespace NewLife.NoDb
             }
         }
 
+        private Int32 _commits;
         /// <summary>提交修改</summary>
         public void Commit()
         {
-            var n = _version;
+            var mts = _commits;
+            if (mts == 0) return;
 
             try
             {
                 Write();
 
-                Interlocked.Add(ref _version, -n);
+                Interlocked.Add(ref _commits, -mts);
             }
             catch (ObjectDisposedException) { }
         }
 
         private TimerX _timer;
-        private Int32 _version;
         private void SetChange()
         {
-            Interlocked.Increment(ref _version);
+            Interlocked.Increment(ref _commits);
 
             if (_timer == null)
             {
@@ -241,9 +242,9 @@ namespace NewLife.NoDb
                 {
                     if (_timer == null)
                     {
-                        _timer = new TimerX(s => Commit(), null, 10_000, 10_000, "NoDb")
+                        _timer = new TimerX(s => Commit(), null, 0, 1_000, "NoDb")
                         {
-                            CanExecute = () => _version > 0,
+                            CanExecute = () => _commits > 0,
                             Async = true,
                         };
                     }
