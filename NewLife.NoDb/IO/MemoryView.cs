@@ -22,6 +22,10 @@ namespace NewLife.NoDb.IO
         /// <summary>最大容量。初始化后不再改变</summary>
         public Int64 Capacity { get; }
 
+        /// <summary>扩容增长率。默认10表示每次最少增加10%</summary>
+        /// <remarks>增长率越大性能越高，空间浪费也越大</remarks>
+        public Int32 StepRate { get; set; } = 10;
+
         /// <summary>视图</summary>
         private MemoryMappedViewAccessor _view;
 
@@ -77,13 +81,6 @@ namespace NewLife.NoDb.IO
                 var remain = Capacity - Size;
                 if (Capacity > 0 && remain < 0) throw new ArgumentOutOfRangeException(nameof(Size));
 
-                // 最小增量 10%
-                var step = maxsize - Size;
-                if (step < 0)
-                    step = 0;
-                else if (step < Size / 10)
-                    step = Size / 10;
-
                 // 扩大视图，4k 对齐边界
                 if (Capacity >= 4096)
                 {
@@ -96,9 +93,16 @@ namespace NewLife.NoDb.IO
                         if (n > 0) maxsize += 4096 - n;
                     }
 
-                    // 底层边界4k对齐，Size不一定对齐
-                    step = maxsize - Size;
+                    //// 底层边界4k对齐，Size不一定对齐
+                    //step = maxsize - Size;
                 }
+
+                // 最小增量 10%
+                var step = maxsize - Size;
+                if (step < 0)
+                    step = 0;
+                else if (step < Size * StepRate / 100)
+                    step = Size * StepRate / 100;
 
                 // 注意末端边界，对齐后可能导致越界
                 if (remain >= 0 && step > remain) step = remain;
@@ -115,7 +119,8 @@ namespace NewLife.NoDb.IO
                 // 映射文件扩容
                 File.CheckCapacity(Offset + Size);
 
-                _view = File.Map.CreateViewAccessor(Offset, Size);
+                var access = File.Readonly ? MemoryMappedFileAccess.Read : MemoryMappedFileAccess.ReadWrite;
+                _view = File.Map.CreateViewAccessor(Offset, Size, access);
 
                 // 版本必须一致，如果内存文件扩容后版本改变，这里也要重新生成视图
                 _Version = File.Version;

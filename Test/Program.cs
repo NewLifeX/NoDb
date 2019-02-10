@@ -210,7 +210,7 @@ namespace Test
         static void Test5()
         {
             var count = 24 * 3600L;
-            count *= 10;
+            count *= 100;
             //count = 13;
             var buf = "01234567890ABCD".GetBytes();
             using (var db = new ListDb("List.db", false, false))
@@ -233,7 +233,7 @@ namespace Test
                 XTrace.WriteLine("写入{0:n0}，耗时{1:n0}ms，速度 {2:n0}tps", count, ms, count * 1000 / ms);
             }
 
-            count *= 100;
+            count *= 10;
             using (var db = new ListDb("List.db", true))
             {
                 var total = db.Count;

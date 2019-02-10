@@ -55,7 +55,7 @@ namespace NewLife.NoDb
         /// <param name="init">自动初始化</param>
         public ListDb(String file, Boolean readOnly, Boolean init = true)
         {
-            File = new MemoryFile(file);
+            File = new MemoryFile(file, readOnly);
             ReadOnly = readOnly;
 
             if (readOnly)
@@ -67,6 +67,9 @@ namespace NewLife.NoDb
                 Heap = new Heap(File, HEADER_SIZE, MAX_SIZE, false);
                 View = Heap.View;
             }
+
+            // 加大步进增长率，减少映射次数，提升性能
+            View.StepRate = 100;
 
             // 加载
             if (init) Init();
