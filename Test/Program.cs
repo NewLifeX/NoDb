@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using NewLife;
 using NewLife.Log;
 using NewLife.NoDb;
 using NewLife.NoDb.Collections;

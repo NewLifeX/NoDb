@@ -24,6 +24,6 @@
     <DefineConstants>TRACE;__CORE__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.1.2019.618" />
+    <PackageReference Include="NewLife.Core" Version="8.10.2020.901" />
   </ItemGroup>
 </Project>

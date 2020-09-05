@@ -41,9 +41,9 @@ namespace NewLife.NoDb.Collections
 
         /// <summary>销毁</summary>
         /// <param name="disposing"></param>
-        protected override void OnDispose(Boolean disposing)
+        protected override void Dispose(Boolean disposing)
         {
-            base.OnDispose(disposing);
+            base.Dispose(disposing);
 
             _Timer.TryDispose();
             _Timer = null;
@@ -78,7 +78,7 @@ namespace NewLife.NoDb.Collections
         /// <summary>是否包含</summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public Boolean Contains(T item) { return IndexOf(item) >= 0; }
+        public Boolean Contains(T item) => IndexOf(item) >= 0;
 
         /// <summary>查找</summary>
         /// <param name="item"></param>
@@ -120,7 +120,7 @@ namespace NewLife.NoDb.Collections
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         #endregion
 
         #region 定时保存
