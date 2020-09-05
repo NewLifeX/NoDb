@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NewLife.NoDb.Storage
 {
-    class Bucket
+    internal class Bucket
     {
         /// <summary>数据桶集合</summary>
         internal readonly DbNode[] Buckets;

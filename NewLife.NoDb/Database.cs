@@ -33,27 +33,22 @@ namespace NewLife.NoDb
         #region 构造
         /// <summary>使用内存映射文件实例化数据库</summary>
         /// <param name="file"></param>
-        public Database(String file)
-        {
-            File = new MemoryFile(file);
-        }
+        public Database(String file) => File = new MemoryFile(file);
         #endregion
 
         #region 主要方法
         /// <summary>获取</summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public Packet Get(String key)
-        {
+        public Packet Get(String key) =>
             /*
-             * 1，从索引区找到节点信息
-             * 2，根据节点信息指向，从数据区读取数据
-             */
+* 1，从索引区找到节点信息
+* 2，根据节点信息指向，从数据区读取数据
+*/
 
             //if (!TryGetValue(key, out var block)) return null;
 
-            return null;
-        }
+            null;
 
         ///// <summary>尝试获取</summary>
         ///// <param name="key"></param>
@@ -69,10 +64,7 @@ namespace NewLife.NoDb
         /// <param name="key"></param>
         /// <param name="pk"></param>
         /// <returns></returns>
-        public Boolean Set(String key, Packet pk)
-        {
-            return false;
-        }
+        public Boolean Set(String key, Packet pk) => false;
         #endregion
 
         #region 序列化

@@ -82,8 +82,8 @@ namespace NewLife.NoDb.Storage
         #endregion
 
         #region 基础方法
-        const Int32 HeaderSize = 64;
-        const Int32 FreeBlockSize = 8 + 8 + 8 + 8;
+        private const Int32 HeaderSize = 64;
+        private const Int32 FreeBlockSize = 8 + 8 + 8 + 8;
 
         /// <summary>初始化堆。初始化之后才能使用</summary>
         public void Init()
@@ -123,7 +123,7 @@ namespace NewLife.NoDb.Storage
         /// <summary>设置前一块的Next指针，主要考虑头部_Free</summary>
         /// <param name="prev"></param>
         /// <param name="next"></param>
-        void SetNextOfPrev(MemoryBlock prev, MemoryBlock next)
+        private void SetNextOfPrev(MemoryBlock prev, MemoryBlock next)
         {
             var vw = View;
             // prev为空说明内存分配位于第一空闲块，需要移动_Free

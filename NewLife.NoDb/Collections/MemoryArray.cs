@@ -24,10 +24,7 @@ namespace NewLife.NoDb.Collections
         /// <param name="mf">内存文件</param>
         /// <param name="length">数组长度</param>
         /// <param name="offset">内存偏移</param>
-        public MemoryArray(MemoryFile mf, Int64 length, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T)))
-        {
-            Length = Capacity;
-        }
+        public MemoryArray(MemoryFile mf, Int64 length, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T))) => Length = Capacity;
         #endregion
 
         #region 基本方法

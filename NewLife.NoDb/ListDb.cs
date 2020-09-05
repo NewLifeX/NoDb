@@ -20,9 +20,9 @@ namespace NewLife.NoDb
         #region 属性
         /// <summary>幻数</summary>
         public const String Magic = "ListDb";
-        const Int32 HEADER_SIZE = 1024;
-        const Int64 MAX_SIZE = 2L * 1024 * 1024 * 1024;
-        const Int32 BLOCK_SIZE = sizeof(Int64) + sizeof(Int64);
+        private const Int32 HEADER_SIZE = 1024;
+        private const Int64 MAX_SIZE = 2L * 1024 * 1024 * 1024;
+        private const Int32 BLOCK_SIZE = sizeof(Int64) + sizeof(Int64);
 
         /// <summary>映射文件</summary>
         public MemoryFile File { get; }
@@ -358,7 +358,7 @@ namespace NewLife.NoDb
         /// <returns></returns>
         public IList<Byte[]> ToList() => new DbList { Db = this };
 
-        class DbList : IList<Byte[]>
+        private class DbList : IList<Byte[]>
         {
             public ListDb Db { get; set; }
 

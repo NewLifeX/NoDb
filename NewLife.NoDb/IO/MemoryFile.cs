@@ -147,12 +147,10 @@ namespace NewLife.NoDb.IO
         /// <param name="offset"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public MemoryView CreateView(Int64 offset = 0, Int64 size = 0)
-        {
+        public MemoryView CreateView(Int64 offset = 0, Int64 size = 0) =>
             //CheckCapacity(offset + size);
 
-            return new MemoryView(this, offset, size);
-        }
+            new MemoryView(this, offset, size);
         #endregion
 
         #region 日志

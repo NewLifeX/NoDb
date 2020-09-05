@@ -12,7 +12,7 @@ namespace NewLife.NoDb.Storage
     /// 索引区分为头部、哈希桶、链表数据三部分。
     /// 
     /// </remarks>
-    class DbIndex
+    internal class DbIndex
     {
         #region 属性
         private readonly MemoryMappedFile _mmf;
@@ -42,13 +42,13 @@ namespace NewLife.NoDb.Storage
 
         #region 高级属性
         /// <summary>总记录数</summary>
-        public Int32 Count { get { return _head.ReadInt32(0); } private set { _head.Write(0, value); } }
+        public Int32 Count { get => _head.ReadInt32(0); private set => _head.Write(0, value); }
 
         /// <summary>桶个数。质数</summary>
-        public Int32 BucketCount { get { return _head.ReadInt32(4); } private set { _head.Write(4, value); } }
+        public Int32 BucketCount { get => _head.ReadInt32(4); private set => _head.Write(4, value); }
 
         /// <summary>装载因子。总记录数除以哈希表大小，以0.75为宜</summary>
-        public Double LoadingFactor { get { return BucketCount == 0 ? 0 : (Double)Count / BucketCount; } }
+        public Double LoadingFactor => BucketCount == 0 ? 0 : (Double)Count / BucketCount;
 
         /// <summary>获取或设置与指定的键关联的值</summary>
         /// <param name="key"></param>
@@ -156,10 +156,10 @@ namespace NewLife.NoDb.Storage
 
         /// <summary>获取区域</summary>
         /// <returns></returns>
-        public Block GetArea() { return _block; }
+        public Block GetArea() => _block;
 
         /// <summary>索引器最小大小</summary>
-        public static Int32 MinSize { get { return 256 + 31 * 16 + 1024 * 1024; } }
+        public static Int32 MinSize => 256 + 31 * 16 + 1024 * 1024;
         #endregion
 
         #region 核心方法

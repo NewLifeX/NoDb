@@ -36,19 +36,13 @@ namespace NewLife.NoDb
         /// <param name="mmf"></param>
         /// <param name="block"></param>
         /// <returns></returns>
-        public static Stream CreateStream(this MemoryMappedFile mmf, Block block)
-        {
-            return mmf.CreateViewStream(block.Position, block.Size);
-        }
+        public static Stream CreateStream(this MemoryMappedFile mmf, Block block) => mmf.CreateViewStream(block.Position, block.Size);
 
         /// <summary></summary>
         /// <param name="mmf"></param>
         /// <param name="block"></param>
         /// <returns></returns>
-        public static UnmanagedMemoryAccessor CreateAccessor(this MemoryMappedFile mmf, Block block)
-        {
-            return mmf.CreateViewAccessor(block.Position, block.Size);
-        }
+        public static UnmanagedMemoryAccessor CreateAccessor(this MemoryMappedFile mmf, Block block) => mmf.CreateViewAccessor(block.Position, block.Size);
 
         /// <summary></summary>
         /// <param name="accessor"></param>
@@ -68,10 +62,7 @@ namespace NewLife.NoDb
         /// <param name="accessor"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public static Block ReadBlock(this UnmanagedMemoryAccessor accessor, Int32 position)
-        {
-            return Block.Null;
-        }
+        public static Block ReadBlock(this UnmanagedMemoryAccessor accessor, Int32 position) => Block.Null;
 
         ///// <summary></summary>
         ///// <param name="mmf"></param>

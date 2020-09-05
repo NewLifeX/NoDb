@@ -278,7 +278,7 @@ namespace NewLife.NoDb.IO
         #endregion
 
         #region 辅助
-        private static ConcurrentDictionary<Type, Int32> _sizeCache = new ConcurrentDictionary<Type, Int32>();
+        private static readonly ConcurrentDictionary<Type, Int32> _sizeCache = new ConcurrentDictionary<Type, Int32>();
         private static Int32 SizeOf<T>() => _sizeCache.GetOrAdd(typeof(T), t => Marshal.SizeOf(t));
         #endregion
     }
