@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <AssemblyName>NewLife.NoDb</AssemblyName>
     <AssemblyTitle>NoDb数据库</AssemblyTitle>
     <Description>纯托管轻量级NoSQL数据库，在超大物理存储、节省内存、极速读取等大数据场景中替代Redis</Description>
@@ -17,13 +17,7 @@
     <Version>1.0.2019.0122</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DefineConstants>TRACE;__CORE__</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DefineConstants>TRACE;__CORE__</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.10.2020.901" />
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.202" />
   </ItemGroup>
 </Project>

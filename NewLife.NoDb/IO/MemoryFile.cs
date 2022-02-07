@@ -104,11 +104,7 @@ namespace NewLife.NoDb.IO
                 {
                     //Stream = null;
                     Capacity = capacity;
-#if __CORE__
                     Map = MemoryMappedFile.CreateOrOpen(mapName, capacity, access, MemoryMappedFileOptions.DelayAllocatePages, HandleInheritability.None);
-#else
-                    Map = MemoryMappedFile.CreateOrOpen(mapName, capacity, access, MemoryMappedFileOptions.DelayAllocatePages, null, HandleInheritability.None);
-#endif
                 }
                 else
                 {
@@ -129,11 +125,7 @@ namespace NewLife.NoDb.IO
                     Capacity = fs.Length;
 
                     // 最大容量为0表示使用文件流最大值
-#if __CORE__
                     Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, access, HandleInheritability.None, true);
-#else
-                    Map = MemoryMappedFile.CreateFromFile(fs, mapName, 0, access, null, HandleInheritability.None, true);
-#endif
                 }
 
                 //Interlocked.Increment(ref _Version);
