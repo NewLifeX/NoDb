@@ -1,0 +1,27 @@
+name: publish
+
+on:
+  push:
+    tags: [ v* ]
+  workflow_dispatch:
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Get Version
+      run: echo "VERSION=$(date '+%Y.%m%d')" >> $GITHUB_ENV
+    - name: Build
+      run: |
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.NoDb/NewLife.NoDb.csproj
+
+    - name: Publish
+      run: |
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}

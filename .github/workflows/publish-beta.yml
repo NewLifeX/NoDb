@@ -1,0 +1,33 @@
+name: publish-beta
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+        - 'NewLife.NoDb/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+        - 'NewLife.NoDb/**'
+  workflow_dispatch:
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Get Version
+      run: echo "VERSION=$(date '+%Y.%m%d-beta%H%M')" >> $GITHUB_ENV
+    - name: Build
+      run: |
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.NoDb/NewLife.NoDb.csproj
+
+    - name: Publish
+      run: |
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}

@@ -239,14 +239,7 @@ namespace NewLife.NoDb
             {
                 lock (this)
                 {
-                    if (_timer == null)
-                    {
-                        _timer = new TimerX(s => Commit(), null, 0, 1_000, "NoDb")
-                        {
-                            CanExecute = () => _commits > 0,
-                            Async = true,
-                        };
-                    }
+                    _timer ??= new TimerX(s => Commit(), null, 0, 1_000, "NoDb") { Async = true, };
                 }
             }
         }

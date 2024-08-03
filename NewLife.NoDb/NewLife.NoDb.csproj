@@ -1,23 +1,50 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
-    <AssemblyName>NewLife.NoDb</AssemblyName>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <AssemblyTitle>NoDb数据库</AssemblyTitle>
     <Description>纯托管轻量级NoSQL数据库，在超大物理存储、节省内存、极速读取等大数据场景中替代Redis</Description>
-    <Copyright>版权所有(C) 新生命开发团队 2002~2019</Copyright>
     <Company>新生命开发团队</Company>
-    <Deterministic>false</Deterministic>
-    <AssemblyVersion>1.0.*</AssemblyVersion>
-    <FileVersion>1.0.2019.0122</FileVersion>
-    <RootNamespace>NewLife.NoDb</RootNamespace>
-    <RepositoryUrl>https://github.com/NewLifeX/NewLife.NoDb</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <Copyright>©2002-2024 NewLife</Copyright>
+    <VersionPrefix>1.1</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
     <OutputPath>..\Bin</OutputPath>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Version>1.0.2019.0122</Version>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
+    <NoWarn>1701;1702;NU5104;NU1505;NETSDK1138;CS7035</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Authors>$(Company)</Authors>
+    <PackageProjectUrl>https://newlifex.com/core</PackageProjectUrl>
+    <PackageIcon>leaf.png</PackageIcon>
+    <RepositoryUrl>https://github.com/NewLifeX/NewLife.NoDb</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes>新增TimerProvider支持修正绝对定时器时间差；Binary二进制序列化支持完整时间；新增ProcessHelper；改进IJsonHost；新增CreateConfigOnMissing减少配置文件</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="9.0.2022.202" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.803" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net45' or '$(TargetFramework)'=='net461'">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewLife.NoDb", "NewLife.NoDb\NewLife.NoDb.csproj", "{10BBCB6A-0FC3-4145-B39F-AD63E328A585}"
 EndProject
@@ -9,7 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{840AC1A4-6CB0-4F03-83E6-3005E520FA22}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\publish-beta.yml = .github\workflows\publish-beta.yml
+		.github\workflows\publish.yml = .github\workflows\publish.yml
 		Readme.MD = Readme.MD
+		.github\workflows\test.yml = .github\workflows\test.yml
 	EndProjectSection
 EndProject
 Global
