@@ -40,7 +40,7 @@ namespace NewLife.NoDb
         /// <summary>获取</summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public Packet Get(String key) =>
+        public IPacket Get(String key) =>
             /*
 * 1，从索引区找到节点信息
 * 2，根据节点信息指向，从数据区读取数据
@@ -64,7 +64,7 @@ namespace NewLife.NoDb
         /// <param name="key"></param>
         /// <param name="pk"></param>
         /// <returns></returns>
-        public Boolean Set(String key, Packet pk) => false;
+        public Boolean Set(String key, IPacket pk) => false;
         #endregion
 
         #region 序列化
