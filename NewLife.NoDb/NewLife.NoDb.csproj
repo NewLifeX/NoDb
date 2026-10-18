@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;net8.0</TargetFrameworks>
     <AssemblyTitle>NoDb数据库</AssemblyTitle>
     <Description>纯托管轻量级NoSQL数据库，在超大物理存储、节省内存、极速读取等大数据场景中替代Redis</Description>
     <Company>新生命开发团队</Company>
@@ -42,9 +42,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1016-beta0911" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1018-beta1517" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net45' or '$(TargetFramework)'=='net461'">
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
 </Project>
