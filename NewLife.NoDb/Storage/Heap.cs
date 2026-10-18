@@ -4,6 +4,7 @@ using System.Threading;
 using NewLife.Log;
 using NewLife.NoDb.IO;
 using NewLife.Threading;
+using NewLife;
 
 namespace NewLife.NoDb.Storage
 {
@@ -221,7 +222,7 @@ namespace NewLife.NoDb.Storage
                     prev = mb;
                     if (!mb.MoveNext(vw)) break;
                 }
-                if (mb.Size < len) throw new Exception("空间不足");
+                if (mb.Size < len) throw new Exception(L.T("Insufficient space."));
 
                 // 结果
                 var rs = new MemoryBlock { Position = mb.Position, Size = len };
@@ -277,7 +278,7 @@ namespace NewLife.NoDb.Storage
                 };
                 mb.Read(vw);
 
-                if (mb.Free) throw new ArgumentException("空间已经释放");
+                if (mb.Free) throw new ArgumentException(L.T("The space has already been released."));
 
                 var len = mb.Size;
                 mb.Free = true;
@@ -314,7 +315,7 @@ namespace NewLife.NoDb.Storage
                     {
                         if (mb.Next > 0)
                         {
-                            if (left.Next != mb.Position + len) throw new InvalidDataException("数据指针错误");
+                            if (left.Next != mb.Position + len) throw new InvalidDataException(L.T("Invalid data pointer."));
                         }
                         else
                             mb.Next = left.Next;
@@ -374,7 +375,7 @@ namespace NewLife.NoDb.Storage
                 var mb = new MemoryBlock { Position = ptr - 8 };
                 mb.Read(vw);
 
-                if (mb.Free) throw new ArgumentException("空间已经释放");
+                if (mb.Free) throw new ArgumentException(L.T("The space has already been released."));
 
                 var bk = mb.GetData();
                 if (bk.Size >= size) return bk;

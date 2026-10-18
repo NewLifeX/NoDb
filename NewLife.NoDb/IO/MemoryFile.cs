@@ -1,5 +1,6 @@
 ﻿using System.IO.MemoryMappedFiles;
 using NewLife.Log;
+using NewLife;
 
 namespace NewLife.NoDb.IO;
 
@@ -115,7 +116,7 @@ public class MemoryFile : DisposeBase
                 if (Readonly)
                 {
                     fs ??= new FileStream(FileName.GetFullPath(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.RandomAccess);
-                    if (fs.Length < capacity) throw new InvalidDataException($"文件长度不足 {capacity}");
+                    if (fs.Length < capacity) throw new InvalidDataException(L.T("The file length is less than {0}.", capacity));
                 }
                 else
                 {

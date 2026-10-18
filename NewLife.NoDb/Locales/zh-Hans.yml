@@ -1,0 +1,6 @@
+# 简体中文译文。键为英文源文，缺失时运行期回退英文。
+"Insufficient capacity.": "容量不足"
+"Insufficient space.": "空间不足"
+"The space has already been released.": "空间已经释放"
+"Invalid data pointer.": "数据指针错误"
+"The file length is less than {0}.": "文件长度不足 {0}"

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -279,7 +279,13 @@ namespace NewLife.NoDb.IO
 
         #region 辅助
         private static readonly ConcurrentDictionary<Type, Int32> _sizeCache = new ConcurrentDictionary<Type, Int32>();
-        private static Int32 SizeOf<T>() => _sizeCache.GetOrAdd(typeof(T), t => Marshal.SizeOf(t));
+        private static Int32 SizeOf<T>() => _sizeCache.GetOrAdd(typeof(T), _ =>
+#if NET45
+            Marshal.SizeOf(typeof(T))
+#else
+            Marshal.SizeOf<T>()
+#endif
+        );
         #endregion
     }
 }

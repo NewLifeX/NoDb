@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewLife.NoDb.IO;
+using NewLife;
 
 namespace NewLife.NoDb.Collections
 {
@@ -57,7 +58,7 @@ namespace NewLife.NoDb.Collections
             do
             {
                 n = Count;
-                if (n >= Capacity) throw new InvalidOperationException("容量不足");
+                if (n >= Capacity) throw new InvalidOperationException(L.T("Insufficient capacity."));
             }
             while (Interlocked.CompareExchange(ref _Count, n + 1, n) != n);
 
@@ -78,7 +79,7 @@ namespace NewLife.NoDb.Collections
             do
             {
                 n = Count;
-                if (n + size - 1 >= Capacity) throw new InvalidOperationException("容量不足");
+                if (n + size - 1 >= Capacity) throw new InvalidOperationException(L.T("Insufficient capacity."));
             }
             while (Interlocked.CompareExchange(ref _Count, n + size, n) != n);
 
@@ -103,7 +104,7 @@ namespace NewLife.NoDb.Collections
             do
             {
                 n = Count;
-                if (n >= Capacity) throw new InvalidOperationException("容量不足");
+                if (n >= Capacity) throw new InvalidOperationException(L.T("Insufficient capacity."));
             }
             while (Interlocked.CompareExchange(ref _Count, n + 1, n) != n);
 

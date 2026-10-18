@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -189,7 +189,14 @@ namespace NewLife.NoDb.Collections
         protected static Int32 _HeadSize = 0;
 
         /// <summary>元素大小</summary>
-        protected static Int32 _ItemSize = Marshal.SizeOf(typeof(T));
+        protected static Int32 _ItemSize = SizeOf<T>();
+
+        private static Int32 SizeOf<T>() =>
+#if NET45
+            Marshal.SizeOf(typeof(T));
+#else
+            Marshal.SizeOf<T>();
+#endif
 
         /// <summary>获取位置</summary>
         /// <param name="idx"></param>

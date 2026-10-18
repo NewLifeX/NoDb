@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NewLife.NoDb.IO;
@@ -24,8 +24,15 @@ namespace NewLife.NoDb.Collections
         /// <param name="mf">内存文件</param>
         /// <param name="length">数组长度</param>
         /// <param name="offset">内存偏移</param>
-        public MemoryArray(MemoryFile mf, Int64 length, Int64 offset = 0) : base(mf, offset, length * Marshal.SizeOf(typeof(T))) => Length = Capacity;
+        public MemoryArray(MemoryFile mf, Int64 length, Int64 offset = 0) : base(mf, offset, length * SizeOf<T>()) => Length = Capacity;
         #endregion
+
+        private static Int32 SizeOf<T>() =>
+#if NET45
+            Marshal.SizeOf(typeof(T));
+#else
+            Marshal.SizeOf<T>();
+#endif
 
         #region 基本方法
         /// <summary>清空数组</summary>
