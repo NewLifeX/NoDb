@@ -28,3 +28,78 @@ jobs:
     - name: Test
       run: |
         dotnet test
+
+  localization:
+    name: localization checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check locales
+      shell: pwsh
+      run: |
+        $failed = $false
+        Get-ChildItem -Path . -Recurse -Directory -Filter Locales | ForEach-Object {
+          if (Test-Path (Join-Path $_.FullName 'zh-Hans.yml')) {
+            $src = Split-Path $_.FullName -Parent
+            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir $src
+            if ($LASTEXITCODE -ne 0) { $failed = $true }
+          }
+        }
+        if ($failed) { exit 1 }
+    - name: Check README languages
+      shell: pwsh
+      run: pwsh -File ./sync-readme-languages.ps1 -Check
+
+  # 多平台编译矩阵：NoDb 为纯托管库，覆盖 Windows / Linux x64 / Linux arm64 与 LoongArch64 编译
+  build-matrix:
+    name: build (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            experimental: false
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+            experimental: true
+          - rid: linux-la64
+            os: ubuntu-latest
+            experimental: true
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      if: matrix.rid != 'linux-la64'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Install QEMU (loong64 binfmt)
+      if: matrix.rid == 'linux-la64'
+      run: |
+        sudo apt-get update && sudo apt-get install -y qemu-user-static binfmt-support
+        sudo update-binfmts --enable qemu-loongarch64 || true
+    - name: Download Loongson .NET SDK (linux-loongarch64)
+      if: matrix.rid == 'linux-la64'
+      run: |
+        curl -fL -o "$HOME/la64-sdk.tar.gz" \
+          https://github.com/loongson/dotnet/releases/download/v10.0.112-loongarch64/dotnet-sdk-10.0.112-linux-loongarch64.tar.gz
+        mkdir -p "$HOME/la64" && tar -xzf "$HOME/la64-sdk.tar.gz" -C "$HOME/la64"
+        "$HOME/la64/dotnet" --info
+      env:
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+    - name: Build
+      if: matrix.rid != 'linux-la64'
+      run: dotnet build NewLife.NoDb/NewLife.NoDb.csproj -c Release --nologo
+    - name: Build (linux-la64, QEMU)
+      if: matrix.rid == 'linux-la64'
+      env:
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+      run: |
+        export PATH="$HOME/la64:$PATH"
+        dotnet build NewLife.NoDb/NewLife.NoDb.csproj -c Release --nologo
