@@ -1,0 +1,6 @@
+# 日本語 词表（ja）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "容量が不足しています。"
+"Insufficient space.": "空き領域が不足しています。"
+"The space has already been released.": "その領域はすでに解放されています。"
+"Invalid data pointer.": "無効なデータポインターです。"
+"The file length is less than {0}.": "ファイル長が {0} 未満です。"

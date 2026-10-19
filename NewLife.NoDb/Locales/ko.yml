@@ -1,0 +1,6 @@
+# 한국어 词表（ko）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "용량이 부족합니다."
+"Insufficient space.": "공간이 부족합니다."
+"The space has already been released.": "해당 공간은 이미 해제되었습니다."
+"Invalid data pointer.": "유효하지 않은 데이터 포인터입니다."
+"The file length is less than {0}.": "파일 길이가 {0}보다 작습니다."

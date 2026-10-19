@@ -1,0 +1,6 @@
+# Français 词表（fr）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "Capacité insuffisante."
+"Insufficient space.": "Espace insuffisant."
+"The space has already been released.": "L'espace a déjà été libéré."
+"Invalid data pointer.": "Pointeur de données non valide."
+"The file length is less than {0}.": "La longueur du fichier est inférieure à {0}."

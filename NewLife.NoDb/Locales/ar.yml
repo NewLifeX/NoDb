@@ -1,0 +1,6 @@
+# العربية 词表（ar）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "السعة غير كافية."
+"Insufficient space.": "المساحة غير كافية."
+"The space has already been released.": "تم تحرير المساحة بالفعل."
+"Invalid data pointer.": "مؤشر بيانات غير صالح."
+"The file length is less than {0}.": "طول الملف أقل من {0}."

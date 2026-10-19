@@ -1,0 +1,6 @@
+# Deutsch 词表（de）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "Unzureichende Kapazität."
+"Insufficient space.": "Unzureichender Speicherplatz."
+"The space has already been released.": "Der Speicherplatz wurde bereits freigegeben."
+"Invalid data pointer.": "Ungültiger Datenzeiger."
+"The file length is less than {0}.": "Die Dateilänge ist kleiner als {0}."

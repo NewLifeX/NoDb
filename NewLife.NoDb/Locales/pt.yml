@@ -1,0 +1,6 @@
+# Português 词表（pt）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"Insufficient capacity.": "Capacidade insuficiente."
+"Insufficient space.": "Espaço insuficiente."
+"The space has already been released.": "O espaço já foi liberado."
+"Invalid data pointer.": "Ponteiro de dados inválido."
+"The file length is less than {0}.": "O comprimento do arquivo é menor que {0}."
